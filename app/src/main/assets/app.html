@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>NovelGrabber</title>
+<style>
+:root{
+  --bg:#0f1116; --surface:#171a21; --card:#1e222b; --hover:#252b36; --border:#282e39;
+  --text:#e3e8f0; --sub:#9099a9; --accent:#6c8cff; --accent-soft:rgba(108,140,255,.16);
+  --glow:rgba(108,140,255,.35); --danger:#ff6b6b; --shadow:0 10px 30px rgba(0,0,0,.4); color-scheme:dark;
+}
+:root[data-theme="darksepia"]{
+  --bg:#1f1a13; --surface:#262019; --card:#2c251c; --hover:#352d22; --border:#453a2b;
+  --text:#e8dcc8; --sub:#a6957d; --accent:#c89858; --accent-soft:rgba(200,152,88,.16);
+  --glow:rgba(200,152,88,.35); --danger:#e06b5a; --shadow:0 10px 30px rgba(0,0,0,.5); color-scheme:dark;
+}
+:root[data-theme="sepia"]{
+  --bg:#f3ead6; --surface:#ede2c8; --card:#e7dabc; --hover:#decfa9; --border:#d5c5a2;
+  --text:#3d2f1e; --sub:#7a6a52; --accent:#9c6b2f; --accent-soft:rgba(156,107,47,.16);
+  --glow:rgba(156,107,47,.30); --danger:#c0392b; --shadow:0 10px 30px rgba(90,70,40,.18); color-scheme:light;
+}
+:root[data-theme="light"]{
+  --bg:#f2f4f8; --surface:#ffffff; --card:#ffffff; --hover:#eff2f6; --border:#e3e6eb;
+  --text:#20242c; --sub:#6b7280; --accent:#2563eb; --accent-soft:rgba(37,99,235,.10);
+  --glow:rgba(37,99,235,.30); --danger:#dc2626; --shadow:0 10px 30px rgba(30,40,60,.12); color-scheme:light;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;min-width:0}
+html,body{margin:0;height:100%;overflow-x:hidden;max-width:100vw}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Roboto,system-ui,sans-serif;font-size:14px;display:flex;flex-direction:column;overflow:hidden}
+button,input,select{font-family:inherit;outline:none;border:0}
+::-webkit-scrollbar{width:0}
+svg{display:block;fill:currentColor}
+
+header{display:flex;align-items:center;gap:9px;padding:14px 18px 6px;flex-shrink:0}
+header .dot{width:11px;height:11px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent)}
+header .t{font-weight:600;font-size:18px;letter-spacing:.2px;flex:1}
+.tabs{display:flex;gap:9px;padding:0 18px 12px;flex-shrink:0}
+.tab{flex:1;height:42px;background:var(--card);color:var(--sub);border-radius:14px;font-size:14px;font-weight:600;transition:all .18s}
+.tab:active{transform:scale(.97)}
+.tab.on{background:var(--accent);color:#fff;box-shadow:0 6px 18px var(--glow)}
+
+.page{flex:1;overflow-y:auto;padding:2px 18px 28px;display:none}
+.page.on{display:block;animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.cardbox{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow)}
+label.small{display:block;font-size:11px;color:var(--sub);letter-spacing:1.3px;margin:2px 0 7px;text-transform:uppercase}
+input[type=url],input[type=number],#libSearch{width:100%;height:46px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:13px;padding:0 14px;font-size:14px;transition:border-color .15s}
+input:focus{border-color:var(--accent)}
+.row{display:flex;gap:10px;align-items:center}
+.row .grow{flex:1}
+.btn{height:46px;padding:0 16px;border-radius:14px;background:var(--accent);color:#fff;font-size:14px;font-weight:600;white-space:nowrap;transition:filter .15s,transform .1s;display:inline-flex;align-items:center;justify-content:center;gap:7px}
+.btn:active{transform:scale(.96)}
+.btn.ghost{background:var(--card);color:var(--text);border:1px solid var(--border)}
+.btn.danger{background:var(--danger)}
+.btn:disabled{opacity:.4}
+#status{font-size:16.5px;font-weight:600;margin:2px 0 10px;min-height:22px}
+#substatus{font-size:12px;color:var(--sub);min-height:16px;word-break:break-all}
+.pwrap{height:7px;background:var(--border);border-radius:5px;overflow:hidden;margin:12px 0 6px}
+#pbar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),#8aa0ff);transition:width .25s;border-radius:5px}
+.subrow{display:flex;gap:10px;margin-top:12px;align-items:center}
+#peekBtn{display:none}
+#logwrap{display:none;margin-top:12px}
+#log{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:11px;font-family:monospace;font-size:11px;color:#cbd2dd;height:150px;overflow-y:auto;white-space:pre-wrap;word-break:break-all}
+.hint{font-size:11.5px;color:var(--sub);line-height:1.55;margin-top:10px}
+
+.novel{display:flex;gap:13px;background:var(--card);border:1px solid var(--border);border-radius:18px;padding:13px;margin-bottom:11px;box-shadow:var(--shadow)}
+.novel.cont{border-color:var(--accent);background:linear-gradient(180deg,var(--accent-soft),var(--card))}
+.novel img{width:56px;height:78px;object-fit:cover;border-radius:11px;background:var(--surface);flex-shrink:0}
+.novel .noimg{width:56px;height:78px;border-radius:11px;background:var(--surface);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--sub)}
+.novel .info{flex:1;min-width:0}
+.novel .nt{font-weight:600;font-size:14.5px;line-height:1.32;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.novel .ns{font-size:11.5px;color:var(--sub);margin-top:5px}
+.acts{display:flex;gap:7px;margin-top:9px;flex-wrap:wrap}
+.chip{height:34px;padding:0 13px;border-radius:11px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:12.5px;font-weight:600;display:inline-flex;align-items:center;gap:5px;transition:transform .1s}
+.chip:active{transform:scale(.95)}
+.chip svg{width:13px;height:13px}
+.chip.play{background:var(--accent);border-color:var(--accent);color:#fff}
+.chip.del{color:var(--danger)}
+.librow{display:flex;gap:9px;margin-bottom:13px}
+#sitesMenu{background:var(--surface);border:1px solid var(--border);border-radius:14px;margin-top:10px;overflow:hidden}
+#sitesMenu button{display:block;width:100%;text-align:left;padding:13px 16px;background:none;color:var(--text);font-size:13.5px;border-bottom:1px solid var(--border)}
+#sitesMenu button:last-child{border-bottom:none}
+#sitesMenu button:active{background:var(--accent-soft)}
+.tab.gear{flex:0 0 46px;font-size:18px;padding:0}
+.npr{display:flex;align-items:center;gap:8px;margin-top:8px}
+.npr .lbar{flex:1}
+.npr span{font-size:11px;color:var(--sub);min-width:30px;text-align:right}
+.chip.grow{flex:1;justify-content:center}
+.chip.more{width:44px;justify-content:center;font-weight:700;font-size:16px}
+.lrow{display:flex;align-items:center;gap:11px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:9px 12px;margin-bottom:9px}
+.lrow img{width:38px;height:52px;object-fit:cover;border-radius:7px;flex:0 0 auto}
+.lrow .noimg{width:38px;height:52px;font-size:17px;border-radius:7px;flex:0 0 auto;display:flex;align-items:center;justify-content:center}
+.lrt{flex:1;min-width:0}
+.lrt .t{font-weight:600;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lrt .s{color:var(--sub);font-size:11.5px;margin:2px 0 5px}
+.lbar{height:5px;border-radius:3px;background:var(--border);overflow:hidden}
+.lbar i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),#8aa0ff);border-radius:3px}
+.lpc{flex:0 0 auto;color:var(--sub);font-size:11.5px;width:36px;text-align:right}
+.lmore{flex:0 0 auto;width:36px;height:36px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-weight:700;font-size:15px}
+#catbar{display:flex;gap:8px;overflow-x:auto;padding:2px 0 12px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+#catbar::-webkit-scrollbar{display:none}
+.catchip{flex:0 0 auto;height:36px;padding:0 15px;border-radius:18px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.catchip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.catchip .cnt{opacity:.65;font-weight:400}
+.librow .btn{flex:1;height:42px;font-size:12.5px;padding:0 8px}
+#empty{text-align:center;color:var(--sub);padding:50px 10px;font-size:13px;line-height:1.8}
+.tab.gear{flex:0 0 46px;font-size:18px;padding:0}
+.setsec{margin:4px 0 22px}
+.setsec h3{font-size:11px;letter-spacing:1.3px;text-transform:uppercase;color:var(--sub);margin:0 0 12px;font-weight:600}
+.themegrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.themebtn{height:54px;border-radius:14px;border:1.5px solid var(--border);background:var(--card);color:var(--text);font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:9px;transition:transform .1s}
+.themebtn:active{transform:scale(.97)}
+.themebtn.on{border-color:var(--accent);background:var(--accent-soft)}
+.themebtn .sw{width:18px;height:18px;border-radius:6px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
+.setrow{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:13px 16px;margin-bottom:10px}
+.setrow .lbl{flex:1;font-size:14px;font-weight:500}
+.setrow .sub{font-size:12px;color:var(--sub);margin-top:3px;font-weight:400}
+.switch{position:relative;width:50px;height:30px;border-radius:16px;background:var(--border);transition:background .2s;flex:0 0 auto}
+.switch.on{background:var(--accent)}
+.switch i{position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.switch.on i{left:23px}
+.setbtn{width:100%;height:50px;border-radius:14px;background:var(--card);border:1px solid var(--border);color:var(--text);font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px;transition:transform .1s}
+.setbtn:active{transform:scale(.98)}
+.setbtn.danger{color:var(--danger);border-color:color-mix(in srgb,var(--danger) 45%,var(--border))}
+#toast{position:fixed;left:50%;bottom:calc(26px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--surface);border:1px solid var(--border);color:var(--text);padding:11px 20px;border-radius:14px;font-size:13px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .25s;z-index:60;max-width:82vw}
+#toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<header><span class="dot"></span><span class="t">NovelGrabber</span></header>
+<div class="tabs">
+  <button class="tab on" id="tabDl">Download</button>
+  <button class="tab" id="tabLib">Library</button>
+  <button class="tab gear" id="tabSet">⚙</button>
+</div>
+
+<div class="page on" id="pageDl">
+  <div class="cardbox">
+    <label class="small">Chapter-1 or contents URL</label>
+    <input type="url" id="url" placeholder="https://…" inputmode="url" autocapitalize="off" autocomplete="off">
+    <label class="small" style="margin-top:12px">Chapters (0 = all)</label>
+    <div class="row">
+      <input type="number" id="count" value="50" min="0" style="flex:0 0 90px;width:90px">
+      <button class="btn" id="go" style="flex:1">Download</button>
+      <button class="btn ghost" id="stop" style="flex:0 0 auto" disabled>Stop</button>
+    </div>
+  </div>
+
+  <div class="cardbox">
+    <div id="status">Ready</div>
+    <div class="pwrap"><div id="pbar"></div></div>
+    <div id="substatus">Paste a link above, then tap Download.</div>
+    <div class="subrow">
+      <button class="btn ghost" id="peekBtn" style="height:38px;font-size:12.5px">🌐 Show website</button>
+      <button class="btn ghost" id="details" style="height:38px;font-size:12.5px">Show details</button>
+      <button class="btn ghost" id="sitesBtn" style="height:38px;font-size:12.5px">Sites ▾</button>
+      <button class="btn ghost" id="nuBtn" style="height:38px;font-size:12.5px"><img src="https://www.novelupdates.com/favicon.ico" style="width:15px;height:15px;border-radius:3px" onerror="this.remove()"> NovelUpdates</button>
+    </div>
+    <div id="sitesMenu" style="display:none"></div>
+    <div id="logwrap"><div id="log"></div></div>
+    <div class="hint">If a Cloudflare or login page appears, tap <b>Show website</b> to solve it, then
+      tap <b>Back to app</b> — the download continues.</div>
+  </div>
+</div>
+
+<div class="page" id="pageLib">
+  <input id="libSearch" placeholder="Search your library…" style="margin-bottom:11px">
+  <div id="catbar"></div>
+  <div id="list"></div>
+  <div id="empty" style="display:none">Nothing here yet.<br>Download a novel from the Download tab.</div>
+</div>
+
+<div class="page" id="pageSet">
+  <div class="setsec">
+    <h3>Appearance</h3>
+    <div class="themegrid" id="themeGrid">
+      <button class="themebtn" data-th="dark"><span class="sw" style="background:#6c8cff"></span>Dark</button>
+      <button class="themebtn" data-th="darksepia"><span class="sw" style="background:#c89858"></span>Dark Sepia</button>
+      <button class="themebtn" data-th="sepia"><span class="sw" style="background:#9c6b2f"></span>Sepia</button>
+      <button class="themebtn" data-th="light"><span class="sw" style="background:#2563eb"></span>Light</button>
+    </div>
+  </div>
+  <div class="setsec">
+    <h3>On import</h3>
+    <div class="setrow">
+      <div class="lbl">Auto-sort new books into series<div class="sub">Files a new download under a matching series</div></div>
+      <div class="switch" id="autoSw"><i></i></div>
+    </div>
+  </div>
+  <div class="setsec">
+    <h3>Library</h3>
+    <button class="setbtn" id="setAutoNow">⚡ Auto sort now</button>
+    <button class="setbtn" id="setOpenEpub">Open EPUB file</button>
+    <button class="setbtn" id="setSpeak">🔊 Read text aloud</button>
+    <button class="setbtn danger" id="setDelAll">Delete all novels</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const send=o=>{ try{ NG.msg(JSON.stringify(o)); }catch(e){} };
+function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),3000); }
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+const SVG_PLAY='<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
+
+let lastFolder='', autoSortOn=false;
+
+function showPage(p){   // 'dl' | 'lib' | 'set'
+  $('pageDl').classList.toggle('on',p==='dl');
+  $('pageLib').classList.toggle('on',p==='lib');
+  $('pageSet').classList.toggle('on',p==='set');
+  $('tabDl').classList.toggle('on',p==='dl');
+  $('tabLib').classList.toggle('on',p==='lib');
+  $('tabSet').classList.toggle('on',p==='set');
+  if(p==='lib') send({cmd:'lib'});
+  if(p==='set') renderSettings();
+}
+const tab=dl=>showPage(dl?'dl':'lib');   // legacy callers (scrapeFrom)
+$('tabDl').onclick=()=>showPage('dl');
+$('tabLib').onclick=()=>showPage('lib');
+$('tabSet').onclick=()=>showPage('set');
+
+/* ---- settings page ---- */
+function renderSettings(){
+  const th=document.documentElement.dataset.theme||'dark';
+  document.querySelectorAll('#themeGrid .themebtn').forEach(b=>b.classList.toggle('on',b.dataset.th===th));
+  $('autoSw').classList.toggle('on',autoSortOn);
+}
+document.querySelectorAll('#themeGrid .themebtn').forEach(b=>{
+  b.onclick=()=>{ document.documentElement.dataset.theme=b.dataset.th; send({cmd:'setTheme',theme:b.dataset.th}); renderSettings(); };
+});
+$('autoSw').onclick=()=>{ autoSortOn=!autoSortOn; send({cmd:'setAutoSort',on:autoSortOn}); renderSettings(); };
+$('setAutoNow').onclick=()=>send({cmd:'autoSort'});
+$('setOpenEpub').onclick=()=>send({cmd:'openEpub'});
+$('setSpeak').onclick=()=>send({cmd:'speakText'});
+$('setDelAll').onclick=()=>{ if(confirm('Delete ALL novels and files? This cannot be undone.')) send({cmd:'deleteAll'}); };
+
+let busy=false;
+function setBusy(b){ busy=b; $('go').disabled=b; $('stop').disabled=!b; $('url').disabled=b; $('count').disabled=b;
+  $('peekBtn').style.display=b?'inline-flex':'none'; if(!b)$('pbar').style.width='0'; }
+$('go').onclick=()=>{
+  const url=$('url').value.trim();
+  if(!/^https?:\/\//i.test(url)){ toast('Paste a full link starting with http'); return; }
+  setBusy(true); $('log').textContent=''; send({cmd:'start',url,count:parseInt($('count').value||'0',10)});
+};
+$('stop').onclick=()=>send({cmd:'stop'});
+$('peekBtn').onclick=()=>send({cmd:'peek'});
+$('details').onclick=()=>{ const w=$('logwrap'); const s=w.style.display!=='block'; w.style.display=s?'block':'none'; $('details').textContent=s?'Hide details':'Show details'; };
+
+// supported sites — tap one to browse it in the built-in webview, find chapter 1,
+// then hit "⚡ Scrape this page"
+const SITES=[
+  ['NovelLunar','https://novellunar.com'],
+  ['Novel Fire','https://novelfire.net'],
+  ['Ranobes','https://ranobes.top'],
+  ['NovelHall','https://novelhall.com'],
+  ['KAT Reading Cafe','https://katreadingcafe.com'],
+  ['Novelpia (Global)','https://global.novelpia.com'],
+  ['Novel Arrow','https://novelarrow.com'],
+  ['Light Novel World','https://www.lightnovelworld.com'],
+  ['NovelFull','https://novelfull.net'],
+];
+(function(){
+  const menu=$('sitesMenu');
+  SITES.forEach(([name,url])=>{
+    const b=document.createElement('button'); b.textContent=name;
+    b.onclick=()=>{ menu.style.display='none'; $('sitesBtn').textContent='Sites ▾'; send({cmd:'openSite',url}); };
+    menu.appendChild(b);
+  });
+  $('sitesBtn').onclick=()=>{ const s=menu.style.display!=='block'; menu.style.display=s?'block':'none'; $('sitesBtn').textContent=s?'Sites ▴':'Sites ▾'; };
+  $('nuBtn').onclick=()=>send({cmd:'openSite',url:'https://www.novelupdates.com'});
+})();
+
+function novelCard(n,isCont){
+  const d=document.createElement('div'); d.className='novel'+(isCont?' cont':'');
+  const pct=n.pct||0;
+  d.innerHTML=(n.cover?('<img src="'+esc(n.cover)+'" alt="" loading="lazy">'):'<div class="noimg">📖</div>')+
+    '<div class="info"><div class="nt">'+(isCont?'▸ ':'')+esc(n.title)+'</div>'+
+    '<div class="ns">'+n.chapters+' ch · '+esc(n.site||'library')+' · '+esc(n.updated)+'</div>'+
+    '<div class="npr"><div class="lbar"><i style="width:'+pct+'%"></i></div><span>'+pct+'%</span></div>'+
+    '<div class="acts">'+
+      '<button class="chip play grow" data-a="read">'+SVG_PLAY+'Read</button>'+
+      '<button class="chip more" data-a="novelMenu">⋯</button>'+
+    '</div></div>';
+  d.addEventListener('click',e=>{
+    const b=e.target.closest('[data-a]'); if(!b) return;
+    send({cmd:b.dataset.a,folder:n.folder});
+  });
+  return d;
+}
+
+let lastList=[], lastCats=[], lastEpubs=[], lastPdfs=[];
+let selCat=localStorage.getItem('selCat')||'General';
+let libQ='';
+
+function inCat(n,cat){
+  if(cat==='All') return true;
+  if(cat==='General') return !n.cat||n.cat==='General';
+  return (n.cat||'').toLowerCase()===cat.toLowerCase();
+}
+function matchQ(n){ return !libQ||(n.title||'').toLowerCase().includes(libQ); }
+
+function chip(label,cnt,on,fn){
+  const b=document.createElement('button');
+  b.className='catchip'+(on?' on':'');
+  b.innerHTML=esc(label)+(cnt==null?'':' <span class="cnt">'+cnt+'</span>');
+  b.onclick=fn;
+  $('catbar').appendChild(b);
+}
+function pick(c){ selCat=c; localStorage.setItem('selCat',c); renderCats(); renderList(); }
+
+function renderCats(){
+  $('catbar').innerHTML='';
+  // only the three core shelves stay visible — everything else lives behind ⋯
+  const main=['All','General','Completed'];
+  main.forEach(c=>chip(c,lastList.filter(n=>inCat(n,c)).length,c.toLowerCase()===selCat.toLowerCase(),()=>pick(c)));
+  if(!main.some(c=>c.toLowerCase()===selCat.toLowerCase())){   // a custom/format shelf is active
+    const label=selCat==='fmt:epub'?'EPUB files':selCat==='fmt:pdf'?'PDF files':selCat;
+    const cnt=selCat==='fmt:epub'?lastEpubs.length:selCat==='fmt:pdf'?lastPdfs.length
+             :lastList.filter(n=>inCat(n,selCat)).length;
+    chip(label,cnt,true,()=>{});
+  }
+  chip('⋯',null,false,()=>send({cmd:'moreCats'}));
+}
+
+function fileRow(f,pdf){
+  const d=document.createElement('div'); d.className='lrow';
+  d.innerHTML='<div class="noimg">'+(pdf?'📕':'📘')+'</div>'+
+    '<div class="lrt"><div class="t">'+esc(f.name)+'</div><div class="s">'+esc(f.sub)+'</div></div>'+
+    '<button class="chip play">Open</button>';
+  d.onclick=()=>send({cmd:'openFile',path:f.path});
+  return d;
+}
+
+function renderList(){
+  const el=$('list'); el.innerHTML='';
+  if(selCat==='fmt:epub'||selCat==='fmt:pdf'){
+    const pdf=selCat==='fmt:pdf';
+    const files=(pdf?lastPdfs:lastEpubs).filter(f=>!libQ||f.name.toLowerCase().includes(libQ));
+    files.forEach(f=>el.appendChild(fileRow(f,pdf)));
+    $('empty').innerHTML='No '+(pdf?'PDF':'EPUB')+' files yet.<br>Export a novel to create one.';
+    $('empty').style.display=files.length?'none':'block';
+    return;
+  }
+  const shown=lastList.filter(n=>inCat(n,selCat)&&matchQ(n));
+  $('empty').innerHTML=!lastList.length?'Nothing here yet.<br>Download a novel from the Download tab.'
+    :libQ?'No matches for “'+esc(libQ)+'”.':'Nothing in this category yet.';
+  $('empty').style.display=shown.length?'none':'block';
+  const cont=lastFolder?shown.find(n=>n.folder===lastFolder):null;
+  if(cont) el.appendChild(novelCard(cont,true));
+  shown.forEach(n=>{ if(cont&&n.folder===cont.folder) return; el.appendChild(novelCard(n,false)); });
+}
+function renderLib(list,cats,epubs,pdfs){
+  lastList=list; lastCats=cats&&cats.length?cats:['General','Completed'];
+  lastEpubs=epubs||[]; lastPdfs=pdfs||[];
+  renderCats(); renderList();
+}
+$('libSearch').oninput=e=>{ libQ=e.target.value.trim().toLowerCase(); renderList(); };
+
+window.ngOnMessage=function(m){
+  if(!m||!m.type) return;
+  if(m.type==='status') $('status').textContent=m.msg;
+  else if(m.type==='log'){ const l=$('log'); l.textContent+=m.msg+'\n'; l.scrollTop=l.scrollHeight; $('substatus').textContent=m.msg; }
+  else if(m.type==='progress'){ if(m.total>0) $('pbar').style.width=Math.min(100,Math.round(m.done*100/m.total))+'%'; }
+  else if(m.type==='finished') setBusy(false);
+  else if(m.type==='lib'){ lastFolder=m.lastFolder||''; if(m.autoSort!==undefined) autoSortOn=!!m.autoSort; renderLib(m.list||[],m.cats||[],m.epubs||[],m.pdfs||[]); if($('pageSet').classList.contains('on')) renderSettings(); }
+  else if(m.type==='setShelf'){ pick(m.cat||'General'); }
+  else if(m.type==='theme'){ document.documentElement.dataset.theme = m.theme||'dark'; }
+  else if(m.type==='scrapeFrom'){ tab(true); $('url').value=m.url||''; if(m.count!=null) $('count').value=m.count; if(!busy) $('go').click(); }
+};
+send({cmd:'lib'});
+</script>
+</body>
+</html>

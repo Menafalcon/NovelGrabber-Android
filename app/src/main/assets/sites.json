@@ -1,0 +1,91 @@
+{
+  "novellunar.com": {
+    "Content": ["div[style*=\"white-space:pre-wrap\"]", "div[style*=\"white-space: pre-wrap\"]"],
+    "ChapterTitle": ["h1.text-lg", "main h1"],
+    "Increment": true,
+    "PreferIncrement": true
+  },
+  "novelfire.net": {
+    "Content": ["#content", ".chapter-content", "#chapter-container"],
+    "List": ["ul.chapter-list li a", ".chapter-list a"],
+    "Next": ["a#next-chapter", "a.next-chapter", "a.next", "a[rel=next]"],
+    "ChapterTitle": [".chapter-title", ".titles h2", "h1", "h2"],
+    "Increment": true
+  },
+  "ranobes.top": {
+    "Content": ["#arrticle", "#cont-text", ".story .text", "#dle-content .text", ".story_line"],
+    "List": [".cat_block.cat_line a", ".cat_block a"],
+    "Next": ["a#next", "a.next", ".nextlink a", "a[rel=next]"],
+    "ChapterTitle": ["h1.h2", ".story_c h1", "h1"],
+    "Increment": false
+  },
+  "novelhall.com": {
+    "Content": ["#htmlContent", "#txt", ".entry-content", "div.content"],
+    "List": [".book-catalog a", "#morelist a", "ul.chapterlist a"],
+    "Next": ["#next_url", "a#next", "a.next", "a[rel=next]"],
+    "ChapterTitle": [".chapter h1", "h1"],
+    "Increment": true
+  },
+  "katreadingcafe.com": {
+    "Content": [".epcontent", ".entry-content", "#readerarea", ".text-left", ".reading-content"],
+    "List": [".eplister a", "#chapterlist a", "li.wp-manga-chapter a", ".version-chap a"],
+    "First": [".lastend .inepcx a", ".epcurfirst"],
+    "Next": ["a[rel=next]", ".naveps a.next", "a.ch-next", ".nextprev a.next"],
+    "ChapterTitle": [".entry-title", "h1"],
+    "Increment": false
+  },
+  "novelpia.com": {
+    "Content": ["#novel_drawing", ".viewer", "#viewer", ".novel-text", "article"],
+    "ChapterTitle": [".chapter-title", "h1", "h2"],
+    "Increment": false
+  },
+  "global.novelpia.com": {
+    "Content": ["#novel_drawing", ".viewer", "#viewer", ".novel-text", "article"],
+    "ChapterTitle": [".chapter-title", "h1", "h2"],
+    "Increment": false
+  },
+  "novelarrow.com": {
+    "Content": ["article[data-chapter-id]", "article", ".chapter-content", "#chapter-content"],
+    "List": ["a[href*=\"/chapter/\"]"],
+    "ChapterTitle": ["h1", "h2"],
+    "Increment": false,
+    "TocFrom": ["/chapter/([^/]+)/.*$", "/novel/$1"],
+    "TabClick": ["Chapters"],
+    "NextClick": ["[aria-label=\"Next chapter\"]", "a.next-btn", "button.next-btn"]
+  },
+  "lightnovelworld.org": {
+    "Content": ["#chapterText", ".chapter-text", ".chapter-reader"],
+    "Next": ["a.next-btn", ".nav-btn.next-btn", "a[rel=next]"],
+    "List": [".chapter-list a", "#chapter-list a", ".chapters a"],
+    "ChapterTitle": [".chapter-title", "h1"],
+    "Increment": true
+  },
+  "lightnovelworld.com": {
+    "Content": ["#chapterText", ".chapter-text", ".chapter-reader"],
+    "Next": ["a.next-btn", ".nav-btn.next-btn", "a[rel=next]"],
+    "List": [".chapter-list a", "#chapter-list a", ".chapters a"],
+    "ChapterTitle": [".chapter-title", "h1"],
+    "Increment": true
+  },
+  "lightnovelpub.com": {
+    "Content": ["#chapterText", ".chapter-text", ".chapter-reader"],
+    "Next": ["a.next-btn", ".nav-btn.next-btn", "a[rel=next]"],
+    "List": [".chapter-list a", "#chapter-list a", ".chapters a"],
+    "ChapterTitle": [".chapter-title", "h1"],
+    "Increment": true
+  },
+  "novelfull.net": {
+    "Content": ["#chapter-content", ".chapter-c", ".chapter-content"],
+    "ChapterTitle": [".chapter-title", "a.chapter-title", "span.chapter-text"],
+    "Next": ["#next_chap", "a#next_chap", "a[rel=next]"],
+    "List": [".list-chapter a", "#list-chapter a", "ul.list-chapter a"],
+    "Increment": false
+  },
+  "novelfull.com": {
+    "Content": ["#chapter-content", ".chapter-c", ".chapter-content"],
+    "ChapterTitle": [".chapter-title", "a.chapter-title", "span.chapter-text"],
+    "Next": ["#next_chap", "a#next_chap", "a[rel=next]"],
+    "List": [".list-chapter a", "#list-chapter a", "ul.list-chapter a"],
+    "Increment": false
+  }
+}

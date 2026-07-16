@@ -1,0 +1,39 @@
+apply plugin: 'com.android.application'
+apply plugin: 'org.jetbrains.kotlin.android'
+
+// The project lives on the OneDrive-synced Desktop, which intermittently locks files in
+// build/intermediates (resource merge fails to delete). Build to a non-synced local dir.
+layout.buildDirectory.set(new File(System.getProperty("user.home"), "AppData/Local/ngbuild/app"))
+
+android {
+    namespace 'com.novelgrabber.app'
+    compileSdk 36
+
+    defaultConfig {
+        applicationId "com.novelgrabber.app"
+        minSdk 24
+        targetSdk 36
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+}
+
+dependencies {
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0'
+    implementation 'androidx.core:core-ktx:1.13.1'
+    implementation 'androidx.media:media:1.7.0'   // MediaSession + media-style notification for background TTS
+}

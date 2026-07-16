@@ -1,0 +1,17 @@
+# Gradle / Android build output
+.gradle/
+.kotlin/
+build/
+app/build/
+
+# Local machine config (SDK path etc.)
+local.properties
+
+# IDE
+.idea/
+*.iml
+captures/
+
+# OS
+Thumbs.db
+.DS_Store

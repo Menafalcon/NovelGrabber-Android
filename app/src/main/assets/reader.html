@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Reader</title>
+<style>
+:root{
+  --bg:#0f1116; --surface:#171a21; --card:#1e222b; --border:#282e39;
+  --text:#dfe4ee; --sub:#9099a9; --accent:#6c8cff; --accent-soft:rgba(108,140,255,.16);
+  --shadow:0 12px 34px rgba(0,0,0,.5); color-scheme:dark;
+}
+:root[data-theme="darksepia"]{
+  --bg:#1f1a13; --surface:#262019; --card:#2c251c; --border:#453a2b;
+  --text:#e8dcc8; --sub:#a6957d; --accent:#c89858; --accent-soft:rgba(200,152,88,.16);
+  --shadow:0 12px 34px rgba(0,0,0,.55); color-scheme:dark;
+}
+:root[data-theme="sepia"]{
+  --bg:#f4ecda; --surface:#efe4cb; --card:#e9ddbf; --border:#d8c9a6;
+  --text:#423320; --sub:#7d6d54; --accent:#a06a2c; --accent-soft:rgba(160,106,44,.16);
+  --shadow:0 12px 34px rgba(90,70,40,.2);
+}
+:root[data-theme="light"]{
+  --bg:#f7f8fa; --surface:#ffffff; --card:#ffffff; --border:#e6e9ef;
+  --text:#1e232b; --sub:#69707c; --accent:#2f6bff; --accent-soft:rgba(47,107,255,.10);
+  --shadow:0 12px 34px rgba(30,40,60,.14);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Roboto,system-ui,sans-serif;
+  transition:background .35s,color .35s;overflow:hidden}
+button,select{font-family:inherit;outline:none;border:0;background:none;color:inherit}
+::-webkit-scrollbar{width:0}
+svg{display:block;width:22px;height:22px;fill:currentColor}
+
+#topbar{position:fixed;top:0;left:0;right:0;height:54px;z-index:30;display:flex;align-items:center;gap:2px;
+  padding:0 6px;background:var(--surface);border-bottom:1px solid var(--border)}
+.tbtn{height:44px;min-width:44px;border-radius:12px;color:var(--sub);display:flex;align-items:center;justify-content:center;
+  transition:background .15s,color .15s}
+.tbtn:active{background:var(--accent-soft);transform:scale(.94)}
+.tbtn.active{color:var(--accent);background:var(--accent-soft)}
+.tbtn svg{width:21px;height:21px}
+#bookTitle{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;text-align:center;padding:0 4px}
+#timeEst{font-size:11px;color:var(--sub);white-space:nowrap;padding-right:6px}
+#pbar{position:fixed;top:54px;left:0;height:2.5px;width:0;background:linear-gradient(90deg,var(--accent),color-mix(in srgb,var(--accent) 55%,white));z-index:31;transition:width .1s;border-radius:0 2px 2px 0}
+
+#scroller{position:absolute;top:54px;bottom:0;left:0;right:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
+#page{padding:24px 12px 55vh}
+#chapHead{font-weight:650;font-size:1.25em;line-height:1.4;margin:6px 0 1.9em;text-align:center;padding:6px 10px;border-radius:12px;transition:background .35s}
+#chapHead.tts-on{background:var(--accent-soft)}
+#chapHead small{display:block;color:var(--sub);font-weight:400;font-size:.6em;margin-top:9px;letter-spacing:1.5px;text-transform:uppercase}
+#content{font-family:var(--ff,Georgia,serif);font-size:var(--fs,18px);line-height:var(--lh,1.82)}
+#content p{margin:0 0 1.05em;padding:3px 10px;border-radius:8px;transition:background .4s}
+#content p.tts-on{background:var(--accent-soft)}
+#content img{max-width:100%;height:auto;display:block;margin:16px auto;border-radius:12px}
+#endNav{display:flex;gap:12px;justify-content:center;margin-top:46px}
+.navBig{padding:14px 26px;border-radius:14px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:14px;transition:transform .12s,border-color .15s}
+.navBig:active{transform:scale(.96);border-color:var(--accent)}
+#loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--sub);font-size:14px;text-align:center;padding:0 30px;line-height:1.7}
+
+.panel{position:fixed;left:0;right:0;bottom:0;max-height:74vh;overflow-y:auto;
+  background:var(--surface);border-top:1px solid var(--border);border-radius:22px 22px 0 0;box-shadow:var(--shadow);
+  padding:10px 18px calc(26px + env(safe-area-inset-bottom));z-index:40;transform:translateY(106%);
+  transition:transform .32s cubic-bezier(.32,1.02,.42,1)}
+.panel.open{transform:none}
+.panel .grab{width:40px;height:4px;border-radius:3px;background:var(--border);margin:0 auto 14px}
+.panel h4{margin:2px 0 14px;font-size:11px;letter-spacing:1.6px;color:var(--sub);text-transform:uppercase}
+.prow{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.prow label{width:70px;font-size:13px;color:var(--sub);flex-shrink:0}
+.prow input[type=range]{flex:1;accent-color:var(--accent);height:26px}
+.prow select{flex:1;height:44px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:12px;padding:0 10px;font-size:13.5px;min-width:0}
+.prow .val{width:44px;text-align:right;font-size:12.5px;color:var(--sub)}
+.seg{display:flex;gap:8px;flex:1}
+.seg button{flex:1;height:42px;border:1px solid var(--border);background:var(--card);color:var(--sub);border-radius:12px;font-size:13px;transition:all .15s}
+.seg button.sel{background:var(--accent-soft);border-color:var(--accent);color:var(--text)}
+.iconbtn{width:44px;height:44px;flex-shrink:0;border-radius:12px;background:var(--card);border:1px solid var(--border);color:var(--text);display:flex;align-items:center;justify-content:center}
+.iconbtn:active{transform:scale(.94)}
+
+#toc #tocList{list-style:none;margin:0;padding:0}
+#toc #tocList li{padding:13px 12px;border-radius:12px;font-size:14px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#toc #tocList li.cur{background:var(--accent-soft);color:var(--accent);font-weight:600}
+#bookCard{display:flex;gap:14px;margin-bottom:16px;align-items:center}
+#bookCard img{width:54px;height:76px;object-fit:cover;border-radius:10px}
+#bookCard .bt{font-weight:600;font-size:14.5px;line-height:1.35}
+#bookCard .ba{color:var(--sub);font-size:12px;margin-top:3px}
+#shade{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:39;opacity:0;pointer-events:none;transition:opacity .25s}
+#shade.on{opacity:1;pointer-events:auto}
+
+#ttsbar{position:fixed;left:0;right:0;bottom:0;z-index:35;
+  display:flex;align-items:center;gap:8px;
+  padding:9px 14px calc(9px + env(safe-area-inset-bottom));
+  background:var(--surface);border-top:1px solid var(--border);
+  transform:translateY(120%);transition:transform .34s cubic-bezier(.34,1.3,.5,1)}
+#ttsbar.show{transform:translateY(0)}
+#tbFill{position:absolute;top:-2px;left:0;height:3px;width:0;border-radius:0 2px 2px 0;
+  background:linear-gradient(90deg,var(--accent),color-mix(in srgb,var(--accent) 55%,white));transition:width .2s}
+#tbTime{margin-left:auto;font-size:12px;color:var(--sub);white-space:nowrap;text-align:right}
+.pbtn{width:52px;height:52px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;transition:transform .12s,filter .15s}
+.pbtn:active{transform:scale(.92)}
+.pbtn svg{width:24px;height:24px}
+.pbtn.small{width:44px;height:44px;background:var(--card);color:var(--text);border:1px solid var(--border)}
+.pbtn.small svg{width:20px;height:20px}
+#ttsStartBtn{width:100%;height:50px;border-radius:14px;background:var(--accent);color:#fff;font-size:15px;font-weight:600;margin-bottom:16px;display:flex;align-items:center;justify-content:center;gap:8px}
+#ttsStartBtn:active{transform:scale(.98)}
+#speakPane{position:fixed;inset:0;background:var(--bg);z-index:50;display:none;flex-direction:column;padding:0 14px calc(14px + env(safe-area-inset-bottom))}
+#speakPane.on{display:flex}
+#speakTop{display:flex;align-items:center;gap:4px;height:54px;flex-shrink:0}
+#speakTop .t{font-weight:600;font-size:15px;flex:1}
+#speakText{flex:1;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:14px;
+  padding:14px;font-size:15px;line-height:1.6;font-family:inherit;resize:none;outline:none;margin-bottom:12px}
+#speakText:focus{border-color:var(--accent)}
+#speakRow{display:flex;gap:10px;flex-shrink:0}
+#speakRow button{flex:1;height:48px;border-radius:13px;font-size:14.5px;font-weight:600}
+#speakGo{background:var(--accent);color:#fff}
+#speakStop{background:var(--card);color:var(--text);border:1px solid var(--border)}
+#toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border);color:var(--text);
+  padding:11px 20px;border-radius:14px;font-size:13px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .25s;z-index:60;max-width:80vw}
+#toast.show{opacity:1}
+.hint{font-size:11.5px;color:var(--sub);line-height:1.55}
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <button class="tbtn" id="btnBack" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15.4 7.4 14 6l-6 6 6 6 1.4-1.4L10.8 12z"/></svg></button>
+  <button class="tbtn" id="btnToc" aria-label="Chapters"><svg viewBox="0 0 24 24"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg></button>
+  <div id="bookTitle">—</div>
+  <div id="timeEst"></div>
+  <button class="tbtn" id="btnTts" aria-label="Read aloud"><svg viewBox="0 0 24 24"><path d="M3 10v4h4l5 5V5L7 10H3zm13.5 2a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4zM14 3.2v2.1c2.9.9 5 3.5 5 6.7s-2.1 5.8-5 6.7v2.1c4-1 7-4.6 7-8.8s-3-7.8-7-8.8z"/></svg></button>
+  <button class="tbtn" id="btnAa" aria-label="Appearance"><svg viewBox="0 0 24 24"><path d="M9.6 5 4 19h2.3l1.2-3h5l1.2 3H16L10.4 5H9.6zM8.3 14 10 9.3 11.7 14H8.3zM20 19V5h-2v14h2z"/></svg></button>
+</div>
+<div id="pbar"></div>
+
+<div id="scroller">
+  <div id="page">
+    <div id="chapHead"></div>
+    <div id="content"></div>
+    <div id="endNav" style="display:none">
+      <button class="navBig" id="endPrev">‹ Prev</button>
+      <button class="navBig" id="endNext">Next ›</button>
+    </div>
+  </div>
+</div>
+<div id="loading">Opening book…</div>
+<div id="shade"></div>
+
+<div class="panel" id="toc">
+  <div class="grab"></div>
+  <div id="bookCard" style="display:none"><img id="bcImg" alt=""><div><div class="bt" id="bcTitle"></div><div class="ba" id="bcAuthor"></div></div></div>
+  <h4>Chapters</h4>
+  <ul id="tocList"></ul>
+</div>
+
+<div class="panel" id="aa">
+  <div class="grab"></div>
+  <h4>Appearance</h4>
+  <div class="prow"><label>Font</label><select id="fontSel"><option value="Georgia,serif">Georgia</option><option value="serif">Serif</option><option value="'Segoe UI',Roboto,sans-serif">Sans</option><option value="monospace">Mono</option></select></div>
+  <div class="prow"><label>Size</label><input type="range" id="fsRange" min="14" max="30" step="1"><span class="val" id="fsVal"></span></div>
+  <div class="prow"><label>Spacing</label><input type="range" id="lhRange" min="1.4" max="2.3" step="0.05"><span class="val" id="lhVal"></span></div>
+</div>
+
+<div class="panel" id="tts">
+  <div class="grab"></div>
+  <h4>Read aloud</h4>
+  <button id="ttsStartBtn"><svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:#fff"><path d="M8 5v14l11-7z"/></svg> Start reading</button>
+  <div class="prow"><label>Language</label><select id="langSel"></select></div>
+  <div class="prow"><label>Voice</label><select id="voiceSel"></select><button class="iconbtn" id="previewBtn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button></div>
+  <div class="prow"><label>Speed</label><input type="range" id="rateRange" min="0.5" max="2.5" step="0.05"><span class="val" id="rateVal"></span></div>
+  <div class="prow"><label>Auto next</label><div class="seg" style="max-width:150px" id="autoSeg"><button data-a="1">On</button><button data-a="0">Off</button></div></div>
+  <div class="hint">Your phone's own Google voices. Playback keeps going when you switch apps or lock the screen — control it from the notification.</div>
+</div>
+
+<div id="ttsbar">
+  <div id="tbFill"></div>
+  <button class="pbtn small" id="ttsPrevP" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg></button>
+  <button class="pbtn" id="ttsPlay" aria-label="Play"></button>
+  <button class="pbtn small" id="ttsStop" aria-label="Stop"><svg viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg></button>
+  <button class="pbtn small" id="ttsNextP" aria-label="Forward"><svg viewBox="0 0 24 24"><path d="M16 6h2v12h-2zM6 18l8.5-6L6 6z"/></svg></button>
+  <div id="tbTime"></div>
+</div>
+
+<div id="speakPane">
+  <div id="speakTop">
+    <button class="tbtn" id="speakBack" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15.4 7.4 14 6l-6 6 6 6 1.4-1.4L10.8 12z"/></svg></button>
+    <div class="t">Read text aloud</div>
+  </div>
+  <textarea id="speakText" placeholder="Paste text here, then tap Speak — it uses your phone's voice."></textarea>
+  <div id="speakRow">
+    <button id="speakGo">▶  Speak</button>
+    <button id="speakStop">■  Stop</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+"use strict";
+const bridge = window.NGR ? { post:o=>{ try{ NGR.msg(JSON.stringify(o)); }catch(e){} } } : null;
+const $ = id => document.getElementById(id);
+const ICON_PLAY='<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
+const ICON_PAUSE='<svg viewBox="0 0 24 24"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>';
+
+let book=null, cur=-1;
+let prefs=load('reader-prefs',{theme:'dark',font:'Georgia,serif',fs:18,lh:1.82,rate:1,voice:'',lang:'',autoNext:true});
+let voices=[];
+let playing=false, pendingPos=null;
+
+function load(k,d){ try{ const v=localStorage.getItem(k); return v?Object.assign({},d,JSON.parse(v)):d; }catch(e){ return d; } }
+function save(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),3000); }
+
+/* ---------- appearance ---------- */
+function applyPrefs(){
+  // theme is driven entirely by the app (native pushes a 'theme' message) — never set here
+  const r=document.documentElement.style;
+  r.setProperty('--ff',prefs.font); r.setProperty('--fs',prefs.fs+'px'); r.setProperty('--lh',prefs.lh);
+  $('fsRange').value=prefs.fs; $('fsVal').textContent=prefs.fs;
+  $('lhRange').value=prefs.lh; $('lhVal').textContent=Number(prefs.lh).toFixed(2);
+  $('fontSel').value=prefs.font; $('rateRange').value=prefs.rate; $('rateVal').textContent=prefs.rate+'x';
+  document.querySelectorAll('#autoSeg button').forEach(b=>b.classList.toggle('sel',(b.dataset.a==='1')===prefs.autoNext));
+  updateTime();
+}
+const savePrefs=()=>save('reader-prefs',prefs);
+$('autoSeg').addEventListener('click',e=>{ if(e.target.dataset.a!==undefined){ prefs.autoNext=e.target.dataset.a==='1'; applyPrefs(); savePrefs(); } });
+$('fontSel').addEventListener('change',e=>{ prefs.font=e.target.value; applyPrefs(); savePrefs(); });
+$('fsRange').addEventListener('input',e=>{ prefs.fs=+e.target.value; applyPrefs(); savePrefs(); });
+$('lhRange').addEventListener('input',e=>{ prefs.lh=+e.target.value; applyPrefs(); savePrefs(); });
+$('rateRange').addEventListener('input',e=>{ prefs.rate=+e.target.value; applyPrefs(); savePrefs(); });
+
+/* ---------- panels ---------- */
+const panels={toc:$('toc'),aa:$('aa'),tts:$('tts')};
+function togglePanel(name){
+  let any=false;
+  for(const k in panels){ const on=(k===name&&!panels[k].classList.contains('open')); panels[k].classList.toggle('open',on); if(on)any=true; }
+  $('shade').classList.toggle('on',any);
+  $('btnToc').classList.toggle('active',panels.toc.classList.contains('open'));
+  $('btnAa').classList.toggle('active',panels.aa.classList.contains('open'));
+  $('btnTts').classList.toggle('active',panels.tts.classList.contains('open'));
+}
+$('btnToc').onclick=()=>togglePanel('toc');
+$('btnAa').onclick=()=>togglePanel('aa');
+$('btnTts').onclick=()=>togglePanel('tts');
+$('shade').onclick=()=>togglePanel('');
+$('btnBack').onclick=()=>{ bridge&&bridge.post({cmd:'close'}); };
+$('speakBack').onclick=()=>{
+  bridge&&bridge.post({cmd:'freeStop'});
+  $('speakPane').classList.remove('on');
+  if(!book) bridge&&bridge.post({cmd:'close'});   // opened straight into speak mode → back to app
+};
+$('speakGo').onclick=()=>{
+  const t=$('speakText').value.trim();
+  if(!t){ toast('Paste some text first'); return; }
+  bridge&&bridge.post({cmd:'speakFree',text:t});
+};
+$('speakStop').onclick=()=>bridge&&bridge.post({cmd:'freeStop'});
+
+/* ---------- book / chapters ---------- */
+function posKey(){ return 'pos:'+(book?book.key:''); }
+function onBook(b){
+  book=b; $('loading').style.display='none';
+  $('bookTitle').textContent=b.title;
+  $('bcTitle').textContent=b.title; $('bcAuthor').textContent=b.author||'';
+  if(b.cover){ $('bcImg').src=b.cover; $('bookCard').style.display='flex'; } else $('bookCard').style.display='none';
+  const ul=$('tocList'); ul.innerHTML='';
+  b.chapters.forEach((t,i)=>{ const li=document.createElement('li'); li.textContent=t; li.onclick=()=>{ go(i); togglePanel(''); }; ul.appendChild(li); });
+  let p=load(posKey(),null);
+  if(!p) p={idx:b.resumeIdx||0, r:b.resumeFrac||0};
+  go(Math.min(p.idx||0,b.chapters.length-1),p.r||0);
+}
+let restoreScroll=-1;
+function go(i,restoreFrac){
+  if(!book||i<0||i>=book.chapters.length) return;
+  cur=i;
+  restoreScroll=(restoreFrac!=null&&restoreFrac>0)?restoreFrac:-1;
+  $('content').innerHTML=''; $('chapHead').textContent='…'; $('endNav').style.display='none';
+  bridge&&bridge.post({cmd:'get',idx:i});
+}
+function displayChapter(idx){ if(idx!==cur){ restoreScroll=-1; cur=idx; $('content').innerHTML=''; bridge&&bridge.post({cmd:'get',idx}); } }
+function onChapter(m){
+  if(m.idx!==cur) return;
+  $('chapHead').innerHTML=''; $('chapHead').textContent=m.title;
+  const small=document.createElement('small'); small.textContent=(cur+1)+' / '+book.chapters.length; $('chapHead').appendChild(small);
+  $('content').innerHTML=m.html;
+  document.querySelectorAll('#tocList li').forEach((li,ix)=>li.classList.toggle('cur',ix===cur));
+  $('endNav').style.display='flex';
+  $('endPrev').style.visibility=cur>0?'visible':'hidden';
+  $('endNext').textContent=cur<book.chapters.length-1?'Next ›':'The End';
+  const sc=$('scroller');
+  if(restoreScroll>=0){ requestAnimationFrame(()=>{ sc.scrollTop=restoreScroll*(sc.scrollHeight-sc.clientHeight); }); restoreScroll=-1; }
+  else sc.scrollTop=0;
+  computeTime();
+  if(pendingPos&&pendingPos.chapter===cur){ applyHighlight(pendingPos.para); pendingPos=null; }
+}
+$('endPrev').onclick=()=>go(cur-1,0);
+$('endNext').onclick=()=>{ if(cur<book.chapters.length-1) go(cur+1,0); else bridge&&bridge.post({cmd:'finished'}); };
+
+let saveT=null;
+$('scroller').addEventListener('scroll',()=>{
+  const sc=$('scroller'); const denom=Math.max(1,sc.scrollHeight-sc.clientHeight);
+  const frac=sc.scrollTop/denom;
+  $('pbar').style.width=(100*frac)+'%';
+  updateTime(frac);
+  clearTimeout(saveT);
+  saveT=setTimeout(()=>{ if(book&&cur>=0){ save(posKey(),{idx:cur,r:frac}); bridge&&bridge.post({cmd:'savepos',key:book.key,idx:cur,r:frac}); } },400);
+});
+
+/* ---------- reading-time estimate ---------- */
+let chapterWords=0;
+function computeTime(){ chapterWords=($('content').innerText.trim().split(/\s+/).filter(Boolean)).length; updateTime(0); }
+function updateTime(frac){
+  if(!chapterWords){ $('timeEst').textContent=''; $('tbTime').textContent=''; return; }
+  if(frac==null){ const sc=$('scroller'); const d=Math.max(1,sc.scrollHeight-sc.clientHeight); frac=sc.scrollTop/d; }
+  const wpm=(playing?200*prefs.rate:220);
+  const left=Math.max(0,Math.round(chapterWords*(1-frac)/wpm));
+  $('timeEst').textContent = left<=0?'· done':('· ~'+left+'m left');
+  $('tbTime').textContent = left<=0?'done':('~'+left+'m left');
+  $('tbFill').style.width=(100*Math.min(1,Math.max(0,frac)))+'%';
+}
+
+/* ---------- TTS (native, background-capable) ---------- */
+function paraEls(){ return Array.from(document.querySelectorAll('#content p')).filter(p=>p.innerText.trim().length>0); }
+function firstVisiblePara(){
+  const sc=$('scroller');
+  if(sc.scrollTop<40) return 0;                 // near top → read the chapter title first
+  const els=paraEls();
+  for(let i=0;i<els.length;i++){ if(els[i].getBoundingClientRect().bottom>92) return i+1; }
+  return els.length?els.length:0;
+}
+function applyHighlight(para){
+  $('chapHead').classList.toggle('tts-on',para===0);
+  const els=paraEls();
+  els.forEach((p,ix)=>p.classList.toggle('tts-on',ix===para-1));
+  const el = para===0 ? $('chapHead') : els[para-1];
+  if(el) el.scrollIntoView({block:'center',behavior:'smooth'});
+}
+function clearHighlight(){ $('chapHead').classList.remove('tts-on'); paraEls().forEach(p=>p.classList.remove('tts-on')); }
+function setBar(show){ $('ttsbar').classList.toggle('show',show); }
+function setPlayIcon(p){ $('ttsPlay').innerHTML=p?ICON_PAUSE:ICON_PLAY; }
+
+function ttsStart(fromPara){
+  const els=paraEls();
+  if(!els.length){ toast('Nothing to read here.'); return; }
+  playing=true; setBar(true); setPlayIcon(true);
+  bridge&&bridge.post({cmd:'ttsPlay',chapter:cur,para:(fromPara==null?firstVisiblePara():fromPara),voice:($('voiceSel').value||''),rate:prefs.rate});
+}
+$('ttsStartBtn').onclick=()=>{ togglePanel(''); ttsStart(null); };
+$('ttsPlay').onclick=()=>{ if(!playing) ttsStart(null); else bridge&&bridge.post({cmd:'ttsToggle'}); };
+$('ttsStop').onclick=()=>{ bridge&&bridge.post({cmd:'ttsStop'}); };
+$('ttsPrevP').onclick=()=>bridge&&bridge.post({cmd:'ttsSkip',dir:-1});
+$('ttsNextP').onclick=()=>bridge&&bridge.post({cmd:'ttsSkip',dir:1});
+$('content').addEventListener('click',e=>{
+  if(!playing) return;
+  const p=e.target.closest('p'); if(!p) return;
+  const ix=paraEls().indexOf(p); if(ix>=0) bridge&&bridge.post({cmd:'ttsJump',chapter:cur,para:ix+1});
+});
+$('previewBtn').onclick=()=>bridge&&bridge.post({cmd:'preview',text:'This is how I sound. I hope you enjoy reading with me.',voice:($('voiceSel').value||''),rate:prefs.rate});
+
+/* ---------- voices ---------- */
+function langList(){ const s=new Set(); voices.forEach(v=>v.lang&&s.add(v.lang)); const a=Array.from(s).sort(); return a.length?a:['en-US']; }
+function fillLang(){
+  const sel=$('langSel'); sel.innerHTML='';
+  langList().forEach(l=>{ const o=document.createElement('option'); o.value=l; o.textContent=l; sel.appendChild(o); });
+  const want=prefs.lang||langList().find(l=>/^en/i.test(l))||langList()[0];
+  sel.value=langList().includes(want)?want:langList()[0]; prefs.lang=sel.value;
+}
+function fillVoices(){
+  const sel=$('voiceSel'); sel.innerHTML=''; const lang=prefs.lang;
+  const grp=(label,arr)=>{ if(!arr.length) return; const g=document.createElement('optgroup'); g.label=label; arr.forEach(v=>{ const o=document.createElement('option'); o.value=v.name; o.textContent=v.name; g.appendChild(o); }); sel.appendChild(g); };
+  grp('On-device voices', voices.filter(v=>v.lang===lang&&!v.network));
+  grp('Network voices', voices.filter(v=>v.lang===lang&&v.network));
+  if(!sel.options.length){ const o=document.createElement('option'); o.value=''; o.textContent='(engine default)'; sel.appendChild(o); }
+  if(prefs.voice&&Array.from(sel.options).some(o=>o.value===prefs.voice)) sel.value=prefs.voice;
+  else{
+    const fav=Array.from(sel.options).find(o=>/-x-tpc-local$/i.test(o.value))||Array.from(sel.options).find(o=>/-local$/i.test(o.value))||sel.options[0];
+    if(fav) sel.value=fav.value;
+  }
+  prefs.voice=sel.value;
+}
+$('langSel').addEventListener('change',e=>{ prefs.lang=e.target.value; savePrefs(); fillVoices(); });
+$('voiceSel').addEventListener('change',e=>{ prefs.voice=e.target.value; savePrefs(); });
+
+/* ---------- bridge ---------- */
+window.ngOnMessage=function(m){
+  if(!m||!m.type) return;
+  if(m.type==='book') onBook(m);
+  else if(m.type==='theme'){ document.documentElement.dataset.theme = m.theme||'dark'; }
+  else if(m.type==='chapter') onChapter(m);
+  else if(m.type==='voices'){ voices=m.list||[]; fillLang(); fillVoices(); }
+  else if(m.type==='ttschapter'){ displayChapter(m.idx); }
+  else if(m.type==='ttspos'){ if(m.chapter===cur) applyHighlight(m.para); else pendingPos=m; }
+  else if(m.type==='ttsstate'){ playing=!!m.playing; setPlayIcon(playing); if(m.stopped){ setBar(false); clearHighlight(); } else setBar(true); updateTime(); }
+  else if(m.type==='speakMode'){ $('loading').style.display='none'; $('speakPane').classList.add('on'); $('speakText').focus(); }
+  else if(m.type==='ttsend'){ setBar(false); clearHighlight(); toast('Finished the book.'); }
+  else if(m.type==='ttserr'){ toast('Voice error: '+(m.err||'')); if(m.id!=='preview'){ playing=false; setBar(false); clearHighlight(); } }
+};
+setPlayIcon(false);
+if(bridge) bridge.post({cmd:'ready'}); else $('loading').textContent='This page must run inside NovelGrabber.';
+applyPrefs();
+</script>
+</body>
+</html>
