@@ -5,14 +5,23 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.media.AudioDeviceCallback
+import android.media.AudioDeviceInfo
+import android.media.AudioManager
 import android.os.Build
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
+import android.os.SystemClock
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 
 /**
  * Foreground service that keeps TTS playback alive while the user is in other apps / screen off,
@@ -27,9 +36,38 @@ class TtsService : Service() {
     private var focusRequest: android.media.AudioFocusRequest? = null
     private var silence: android.media.AudioTrack? = null
 
+    // Headphones coming off / Bluetooth dropping often makes the earbuds fire a stray media
+    // key (PLAY_PAUSE, or PAUSE on a thing that is already paused). The old code mapped
+    // BOTH play and pause to a toggle, so that stray key could flip a paused book back to
+    // playing. Play/pause are now explicit, and for a few seconds after an output device
+    // disappears we ignore remote PLAY requests.
+    @Volatile private var ignorePlayUntil = 0L
+    private fun markRouteLost() { ignorePlayUntil = SystemClock.elapsedRealtime() + 3000 }
+
+    private val noisyReceiver = object : BroadcastReceiver() {
+        override fun onReceive(c: Context?, i: Intent?) {
+            if (i?.action == AudioManager.ACTION_AUDIO_BECOMING_NOISY) {
+                markRouteLost()
+                forward(ACTION_PAUSE)          // wired unplug / Bluetooth disconnect → stop talking
+            }
+        }
+    }
+
+    private val deviceCallback = object : AudioDeviceCallback() {
+        override fun onAudioDevicesRemoved(removedDevices: Array<out AudioDeviceInfo>?) {
+            val personal = setOf(
+                AudioDeviceInfo.TYPE_WIRED_HEADPHONES, AudioDeviceInfo.TYPE_WIRED_HEADSET,
+                AudioDeviceInfo.TYPE_BLUETOOTH_A2DP, AudioDeviceInfo.TYPE_BLUETOOTH_SCO,
+                AudioDeviceInfo.TYPE_USB_HEADSET, AudioDeviceInfo.TYPE_BLE_HEADSET)
+            if (removedDevices?.any { it.isSink && it.type in personal } == true) markRouteLost()
+        }
+    }
+
     companion object {
         var instance: TtsService? = null
         const val ACTION_TOGGLE = "com.novelgrabber.app.TOGGLE"
+        const val ACTION_PLAY = "com.novelgrabber.app.PLAY"
+        const val ACTION_PAUSE = "com.novelgrabber.app.PAUSE"
         const val ACTION_NEXT = "com.novelgrabber.app.NEXT"          // chapter (notification)
         const val ACTION_PREV = "com.novelgrabber.app.PREV"
         const val ACTION_PARA_NEXT = "com.novelgrabber.app.PARA_NEXT" // paragraph (earphone)
@@ -51,8 +89,11 @@ class TtsService : Service() {
         createChannel()
         session = MediaSessionCompat(this, "NovelGrabberTTS").apply {
             setCallback(object : MediaSessionCompat.Callback() {
-                override fun onPlay() = forward(ACTION_TOGGLE)
-                override fun onPause() = forward(ACTION_TOGGLE)
+                override fun onPlay() {
+                    if (SystemClock.elapsedRealtime() < ignorePlayUntil) return   // stray key right after unplug
+                    forward(ACTION_PLAY)
+                }
+                override fun onPause() = forward(ACTION_PAUSE)
                 // earphone next/prev (and FF/rewind) move by PARAGRAPH — chapter jumps stay
                 // on the notification buttons, which fire ACTION_NEXT/PREV directly
                 override fun onSkipToNext() = forward(ACTION_PARA_NEXT)
@@ -71,6 +112,13 @@ class TtsService : Service() {
         startSilence()
         // start foreground immediately with a placeholder so Android doesn't ANR the service
         startForeground(1, buildNotification("NovelGrabber", "Preparing…", true))
+        // pause when the headphones go away (wired unplug / Bluetooth disconnect)
+        ContextCompat.registerReceiver(this, noisyReceiver,
+            IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY), ContextCompat.RECEIVER_NOT_EXPORTED)
+        try {
+            (getSystemService(AUDIO_SERVICE) as AudioManager)
+                .registerAudioDeviceCallback(deviceCallback, Handler(Looper.getMainLooper()))
+        } catch (e: Exception) {}
         // now that instance is set, pull the real title/state from the activity
         MainActivity.instance?.onTtsServiceReady()
     }
@@ -78,6 +126,8 @@ class TtsService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_TOGGLE -> forward(ACTION_TOGGLE)
+            ACTION_PLAY -> forward(ACTION_PLAY)
+            ACTION_PAUSE -> forward(ACTION_PAUSE)
             ACTION_NEXT -> forward(ACTION_NEXT)
             ACTION_PREV -> forward(ACTION_PREV)
             ACTION_STOP -> forward(ACTION_STOP)
@@ -150,8 +200,10 @@ class TtsService : Service() {
     }
 
     private fun buildNotification(title: String, subtitle: String, playing: Boolean): Notification {
+        // own request code (the download notification also opens MainActivity — PendingIntents with the same
+        // code share extras) + a flag telling MainActivity to bring the book that is reading aloud back up
         val content = PendingIntent.getActivity(
-            this, 0, Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
+            this, 20, Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP).putExtra("openReader", true),
             if (Build.VERSION.SDK_INT >= 23) PendingIntent.FLAG_IMMUTABLE else 0)
 
         val b = NotificationCompat.Builder(this, channelId)
@@ -166,7 +218,7 @@ class TtsService : Service() {
             .addAction(android.R.drawable.ic_media_previous, "Prev", pi(ACTION_PREV))
             .addAction(
                 if (playing) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play,
-                if (playing) "Pause" else "Play", pi(ACTION_TOGGLE))
+                if (playing) "Pause" else "Play", pi(if (playing) ACTION_PAUSE else ACTION_PLAY))
             .addAction(android.R.drawable.ic_media_next, "Next", pi(ACTION_NEXT))
             .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Stop", pi(ACTION_STOP))
             .setStyle(androidx.media.app.NotificationCompat.MediaStyle()
@@ -186,6 +238,8 @@ class TtsService : Service() {
     }
 
     override fun onDestroy() {
+        try { unregisterReceiver(noisyReceiver) } catch (e: Exception) {}
+        try { (getSystemService(AUDIO_SERVICE) as AudioManager).unregisterAudioDeviceCallback(deviceCallback) } catch (e: Exception) {}
         try { silence?.stop(); silence?.release(); silence = null } catch (e: Exception) {}
         try {
             val am = getSystemService(AUDIO_SERVICE) as android.media.AudioManager

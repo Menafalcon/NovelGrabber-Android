@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android 12+ draws its own splash first: keep it a plain dark screen (no icon). The app's own
+         splash (same logo, drawn on the very first frame) takes over from there. -->
+    <style name="AppTheme" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@drawable/splash_window</item>
+        <item name="android:statusBarColor">#101217</item>
+        <item name="android:navigationBarColor">#101217</item>
+        <item name="android:colorAccent">#6C8CFF</item>
+        <item name="android:windowSplashScreenBackground">#101217</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@android:color/transparent</item>
+        <item name="android:windowSplashScreenAnimationDuration">0</item>
+    </style>
+</resources>

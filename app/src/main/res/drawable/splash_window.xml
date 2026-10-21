@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Window shown by the system before the app draws its first frame (Android 11 and older):
+     dark background + the same logo the in-app splash uses, so there is never an empty black screen. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item><color android:color="#101217" /></item>
+    <item android:width="96dp" android:height="96dp" android:gravity="center">
+        <bitmap android:src="@drawable/logo_splash" android:gravity="fill" />
+    </item>
+</layer-list>

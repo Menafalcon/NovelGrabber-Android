@@ -50,9 +50,20 @@ svg{display:block;width:22px;height:22px;fill:currentColor}
 #chapHead.tts-on{background:var(--accent-soft)}
 #chapHead small{display:block;color:var(--sub);font-weight:400;font-size:.6em;margin-top:9px;letter-spacing:1.5px;text-transform:uppercase}
 #content{font-family:var(--ff,Georgia,serif);font-size:var(--fs,18px);line-height:var(--lh,1.82)}
+#content[dir="rtl"]{direction:rtl;text-align:right}
+#content p,#content h3{unicode-bidi:plaintext;text-align:start}
 #content p{margin:0 0 1.05em;padding:3px 10px;border-radius:8px;transition:background .4s}
+#content p[dir="rtl"],#content h3[dir="rtl"],#content[dir="rtl"] p{direction:rtl;text-align:right;unicode-bidi:normal}
+#chapHead,#bookTitle,#bcTitle,#bcAuthor,#toc #tocList li,#speakText{unicode-bidi:plaintext}
+#toc #tocList li{text-align:start}
 #content p.tts-on{background:var(--accent-soft)}
-#content img{max-width:100%;height:auto;display:block;margin:16px auto;border-radius:12px}
+#content img{max-width:100%;height:auto;display:block;margin:16px auto;border-radius:12px;cursor:zoom-in}
+/* full-screen image viewer (tap an illustration) */
+#imgView{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.96);display:none;opacity:0;transition:opacity .18s;touch-action:none;overflow:hidden;-webkit-user-select:none;user-select:none}
+#imgView.show{display:block} #imgView.vis{opacity:1}
+#ivImg{position:absolute;left:0;top:0;transform-origin:0 0;max-width:none;max-height:none;margin:0;border-radius:0;will-change:transform;-webkit-user-drag:none;pointer-events:none}
+#ivClose{position:absolute;top:calc(10px + env(safe-area-inset-top));right:12px;width:44px;height:44px;border-radius:22px;border:0;background:rgba(255,255,255,.16);color:#fff;font-size:20px;line-height:44px;padding:0;z-index:2;cursor:pointer}
+#ivHint{position:absolute;left:0;right:0;bottom:calc(18px + env(safe-area-inset-bottom));text-align:center;color:rgba(255,255,255,.6);font-size:12.5px;pointer-events:none;transition:opacity .6s}
 #endNav{display:flex;gap:12px;justify-content:center;margin-top:46px}
 .navBig{padding:14px 26px;border-radius:14px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:14px;transition:transform .12s,border-color .15s}
 .navBig:active{transform:scale(.96);border-color:var(--accent)}
@@ -117,6 +128,23 @@ svg{display:block;width:22px;height:22px;fill:currentColor}
   padding:11px 20px;border-radius:14px;font-size:13px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .25s;z-index:60;max-width:80vw}
 #toast.show{opacity:1}
 .hint{font-size:11.5px;color:var(--sub);line-height:1.55}
+.linkbtn{width:100%;height:48px;border-radius:13px;background:var(--card);border:1px solid var(--border);color:var(--text);font-size:14px;margin:2px 0 16px;display:flex;align-items:center;justify-content:center;gap:8px}
+.linkbtn:active{transform:scale(.98);border-color:var(--accent)}
+#rulesPane{position:fixed;inset:0;background:var(--bg);z-index:50;display:none;flex-direction:column;padding:0 14px calc(14px + env(safe-area-inset-bottom))}
+#rulesPane.on{display:flex}
+#rulesTop{display:flex;align-items:center;gap:4px;height:54px;flex-shrink:0}
+#rulesTop .t{font-weight:600;font-size:15px;flex:1}
+#rulesHint{flex-shrink:0;margin:0 2px 12px}
+#rulesList{flex:1;overflow-y:auto;min-height:0}
+#rulesEmpty{text-align:center;color:var(--sub);font-size:13px;padding:28px 10px;line-height:1.7}
+.rule{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:12px}
+.rule input[type=text]{display:block;width:100%;height:44px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:12px;padding:0 12px;font-size:14px;font-family:inherit;outline:none;margin-bottom:8px}
+.rule input[type=text]:focus{border-color:var(--accent)}
+.rule .rfoot{display:flex;align-items:center;gap:10px;margin-top:2px}
+.rule label.chk{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--sub);flex:1;min-height:36px}
+.rule input[type=checkbox]{width:20px;height:20px;accent-color:var(--accent);flex-shrink:0}
+.rule .del{height:36px;padding:0 14px;border-radius:10px;color:#ff6b6b;border:1px solid var(--border);background:var(--card);font-size:12.5px}
+#addRule{flex-shrink:0;height:50px;border-radius:14px;background:var(--accent);color:#fff;font-size:14.5px;font-weight:600;margin-top:6px}
 </style>
 </head>
 <body>
@@ -143,6 +171,7 @@ svg{display:block;width:22px;height:22px;fill:currentColor}
 </div>
 <div id="loading">Opening book…</div>
 <div id="shade"></div>
+<div id="imgView"><img id="ivImg" alt=""><button id="ivClose" aria-label="Close">✕</button><div id="ivHint">Pinch or double-tap to zoom · drag to move</div></div>
 
 <div class="panel" id="toc">
   <div class="grab"></div>
@@ -167,6 +196,7 @@ svg{display:block;width:22px;height:22px;fill:currentColor}
   <div class="prow"><label>Voice</label><select id="voiceSel"></select><button class="iconbtn" id="previewBtn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button></div>
   <div class="prow"><label>Speed</label><input type="range" id="rateRange" min="0.5" max="2.5" step="0.05"><span class="val" id="rateVal"></span></div>
   <div class="prow"><label>Auto next</label><div class="seg" style="max-width:150px" id="autoSeg"><button data-a="1">On</button><button data-a="0">Off</button></div></div>
+  <button class="linkbtn" id="rulesBtn">✎&nbsp; Text rules — change how words are read</button>
   <div class="hint">Your phone's own Google voices. Playback keeps going when you switch apps or lock the screen — control it from the notification.</div>
 </div>
 
@@ -189,6 +219,18 @@ svg{display:block;width:22px;height:22px;fill:currentColor}
     <button id="speakGo">▶  Speak</button>
     <button id="speakStop">■  Stop</button>
   </div>
+</div>
+
+<div id="rulesPane">
+  <div id="rulesTop">
+    <button class="tbtn" id="rulesBack" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15.4 7.4 14 6l-6 6 6 6 1.4-1.4L10.8 12z"/></svg></button>
+    <div class="t">Text rules</div>
+  </div>
+  <div class="hint" id="rulesHint">Type a word or name and what to say instead — e.g. <b>Fang Yuan</b> → <b>James</b>. Not case-sensitive. Rules run top to bottom, in every book. <b>Leave “Read as” blank to skip the word.</b><br>
+  <b>Match inside words</b> ticked: also changes Fang Yuan’s, Fang Yuans… (any text that contains it). Unticked: only the standalone word, so Fang Yuan’s is left alone.</div>
+  <div id="rulesList"></div>
+  <div id="rulesEmpty">No rules yet.<br>Tap “Add rule” to make one.</div>
+  <button id="addRule">＋ Add rule</button>
 </div>
 
 <div id="toast"></div>
@@ -229,6 +271,13 @@ $('rateRange').addEventListener('input',e=>{ prefs.rate=+e.target.value; applyPr
 
 /* ---------- panels ---------- */
 const panels={toc:$('toc'),aa:$('aa'),tts:$('tts')};
+function scrollTocToCur(){
+  const ul=$('tocList'); if(!ul) return;
+  const li=ul.querySelector('li.cur')||(cur>=0?ul.children[cur]:null);
+  if(!li) return;
+  const box=panels.toc;
+  box.scrollTop=Math.max(0,li.offsetTop-Math.floor((box.clientHeight-li.offsetHeight)/2));
+}
 function togglePanel(name){
   let any=false;
   for(const k in panels){ const on=(k===name&&!panels[k].classList.contains('open')); panels[k].classList.toggle('open',on); if(on)any=true; }
@@ -236,12 +285,17 @@ function togglePanel(name){
   $('btnToc').classList.toggle('active',panels.toc.classList.contains('open'));
   $('btnAa').classList.toggle('active',panels.aa.classList.contains('open'));
   $('btnTts').classList.toggle('active',panels.tts.classList.contains('open'));
+  if(name==='toc'&&panels.toc.classList.contains('open')){
+    scrollTocToCur();
+    requestAnimationFrame(scrollTocToCur);
+    setTimeout(scrollTocToCur,60);
+  }
 }
 $('btnToc').onclick=()=>togglePanel('toc');
 $('btnAa').onclick=()=>togglePanel('aa');
 $('btnTts').onclick=()=>togglePanel('tts');
 $('shade').onclick=()=>togglePanel('');
-$('btnBack').onclick=()=>{ bridge&&bridge.post({cmd:'close'}); };
+$('btnBack').onclick=()=>{ savePosNow(); bridge&&bridge.post({cmd:'close'}); };
 $('speakBack').onclick=()=>{
   bridge&&bridge.post({cmd:'freeStop'});
   $('speakPane').classList.remove('on');
@@ -255,45 +309,92 @@ $('speakGo').onclick=()=>{
 $('speakStop').onclick=()=>bridge&&bridge.post({cmd:'freeStop'});
 
 /* ---------- book / chapters ---------- */
-function posKey(){ return 'pos:'+(book?book.key:''); }
+const AR_RE=/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/g;
+const EN_RE=/[A-Za-z]/g;
+function isArabic(s){ if(!s) return false; const a=(s.match(AR_RE)||[]).length; return a>0 && a*2>=(s.match(EN_RE)||[]).length; }
+$('speakText').addEventListener('input',()=>{ $('speakText').dir=isArabic($('speakText').value)?'rtl':'auto'; });
+let announceShown=false;
 function onBook(b){
-  book=b; $('loading').style.display='none';
-  $('bookTitle').textContent=b.title;
-  $('bcTitle').textContent=b.title; $('bcAuthor').textContent=b.author||'';
+  if(window.ngImgClose) window.ngImgClose();
+  book=b; announceShown=true; $('loading').style.display='none';
+  $('bookTitle').textContent=b.title; $('bookTitle').dir=isArabic(b.title)?'rtl':'auto';
+  $('bcTitle').textContent=b.title; $('bcTitle').dir=isArabic(b.title)?'rtl':'auto';
+  $('bcAuthor').textContent=b.author||''; $('bcAuthor').dir='auto';
   if(b.cover){ $('bcImg').src=b.cover; $('bookCard').style.display='flex'; } else $('bookCard').style.display='none';
   const ul=$('tocList'); ul.innerHTML='';
-  b.chapters.forEach((t,i)=>{ const li=document.createElement('li'); li.textContent=t; li.onclick=()=>{ go(i); togglePanel(''); }; ul.appendChild(li); });
-  let p=load(posKey(),null);
-  if(!p) p={idx:b.resumeIdx||0, r:b.resumeFrac||0};
-  go(Math.min(p.idx||0,b.chapters.length-1),p.r||0);
+  b.chapters.forEach((t,i)=>{ const li=document.createElement('li'); li.textContent=t; li.dir=isArabic(t)?'rtl':'auto'; li.onclick=()=>{ go(i); togglePanel(''); }; ul.appendChild(li); });
+  // where you left off: chapter + paragraph (the app keeps it, and TTS keeps it moving while it reads)
+  const p={para:(b.resumePara==null?-1:b.resumePara), r:b.resumeFrac||0};
+  go(Math.max(0,Math.min(b.resumeIdx||0,b.chapters.length-1)),p);
 }
-let restoreScroll=-1;
-function go(i,restoreFrac){
+let restorePos=null, restoring=false, restoreT=null;
+function go(i,restore){
   if(!book||i<0||i>=book.chapters.length) return;
   cur=i;
-  restoreScroll=(restoreFrac!=null&&restoreFrac>0)?restoreFrac:-1;
+  document.querySelectorAll('#tocList li').forEach((li,ix)=>li.classList.toggle('cur',ix===cur));
+  restorePos=(restore&&typeof restore==='object')?restore:null;
   $('content').innerHTML=''; $('chapHead').textContent='…'; $('endNav').style.display='none';
   bridge&&bridge.post({cmd:'get',idx:i});
 }
-function displayChapter(idx){ if(idx!==cur){ restoreScroll=-1; cur=idx; $('content').innerHTML=''; bridge&&bridge.post({cmd:'get',idx}); } }
+function displayChapter(idx){ if(idx!==cur){ restorePos=null; cur=idx; document.querySelectorAll('#tocList li').forEach((li,ix)=>li.classList.toggle('cur',ix===cur)); $('content').innerHTML=''; bridge&&bridge.post({cmd:'get',idx}); } }
+
+/* put the saved paragraph back at the top of the screen; illustrations decode late and push text down, so re-anchor until they're in (or the user scrolls) */
+function applyRestore(rp){
+  const sc=$('scroller');
+  const doIt=()=>{
+    const els=paraEls();
+    if(rp.para>=0&&els[rp.para]){
+      const r=els[rp.para].getBoundingClientRect(), t=sc.getBoundingClientRect();
+      sc.scrollTop+=r.top-t.top-10;
+    } else if(rp.r>0){ sc.scrollTop=rp.r*(sc.scrollHeight-sc.clientHeight); }
+  };
+  restoring=true;
+  requestAnimationFrame(doIt);
+  $('content').querySelectorAll('img').forEach(im=>{ if(!im.complete) im.addEventListener('load',()=>{ if(restoring) doIt(); }); });
+  clearTimeout(restoreT); restoreT=setTimeout(()=>{ restoring=false; },1800);
+}
+$('scroller').addEventListener('touchstart',()=>{ restoring=false; },{passive:true});
+
 function onChapter(m){
   if(m.idx!==cur) return;
-  $('chapHead').innerHTML=''; $('chapHead').textContent=m.title;
+  $('chapHead').innerHTML=''; $('chapHead').textContent=m.title; $('chapHead').dir=isArabic(m.title)?'rtl':'auto';
   const small=document.createElement('small'); small.textContent=(cur+1)+' / '+book.chapters.length; $('chapHead').appendChild(small);
   $('content').innerHTML=m.html;
+  const chRtl=isArabic(($('content').innerText||'')+' '+(m.title||''));
+  $('content').dir=chRtl?'rtl':'ltr';
+  $('content').querySelectorAll('p,h1,h2,h3,h4,div,li,blockquote').forEach(el=>{
+    if(chRtl||isArabic(el.innerText||'')) el.dir='rtl';
+    else if(!el.getAttribute('dir')) el.dir='auto';
+  });
   document.querySelectorAll('#tocList li').forEach((li,ix)=>li.classList.toggle('cur',ix===cur));
+  if(panels.toc.classList.contains('open')) scrollTocToCur();
   $('endNav').style.display='flex';
   $('endPrev').style.visibility=cur>0?'visible':'hidden';
   $('endNext').textContent=cur<book.chapters.length-1?'Next ›':'The End';
   const sc=$('scroller');
-  if(restoreScroll>=0){ requestAnimationFrame(()=>{ sc.scrollTop=restoreScroll*(sc.scrollHeight-sc.clientHeight); }); restoreScroll=-1; }
-  else sc.scrollTop=0;
+  if(restorePos){ const rp=restorePos; restorePos=null; applyRestore(rp); }
+  else { sc.scrollTop=0; restoring=false; savePosNow(); }     // new chapter → remember it even if the scroll position didn't change
   computeTime();
   if(pendingPos&&pendingPos.chapter===cur){ applyHighlight(pendingPos.para); pendingPos=null; }
+  // first chapter of a freshly opened book is laid out → let the app fade the reader in (two frames = actually painted)
+  if(announceShown){ announceShown=false; requestAnimationFrame(()=>requestAnimationFrame(()=>{ bridge&&bridge.post({cmd:'shown'}); })); }
 }
 $('endPrev').onclick=()=>go(cur-1,0);
 $('endNext').onclick=()=>{ if(cur<book.chapters.length-1) go(cur+1,0); else bridge&&bridge.post({cmd:'finished'}); };
 
+/* index (among readable paragraphs) of the first one on screen; -1 = top of the chapter */
+function visiblePara(){
+  const sc=$('scroller'); if(sc.scrollTop<40) return -1;
+  const els=paraEls(), top=sc.getBoundingClientRect().top+8;
+  for(let i=0;i<els.length;i++){ if(els[i].getBoundingClientRect().bottom>top) return i; }
+  return els.length?els.length-1:-1;
+}
+// while TTS speaks the app saves the position itself (it keeps going with the screen off), so skip then
+function savePosNow(){
+  if(!book||cur<0||playing||restoring) return;
+  const sc=$('scroller'); const frac=sc.scrollTop/Math.max(1,sc.scrollHeight-sc.clientHeight);
+  bridge&&bridge.post({cmd:'savepos',key:book.key,idx:cur,p:visiblePara(),r:frac});
+}
 let saveT=null;
 $('scroller').addEventListener('scroll',()=>{
   const sc=$('scroller'); const denom=Math.max(1,sc.scrollHeight-sc.clientHeight);
@@ -301,8 +402,9 @@ $('scroller').addEventListener('scroll',()=>{
   $('pbar').style.width=(100*frac)+'%';
   updateTime(frac);
   clearTimeout(saveT);
-  saveT=setTimeout(()=>{ if(book&&cur>=0){ save(posKey(),{idx:cur,r:frac}); bridge&&bridge.post({cmd:'savepos',key:book.key,idx:cur,r:frac}); } },400);
+  saveT=setTimeout(savePosNow,400);
 });
+document.addEventListener('visibilitychange',()=>{ if(document.hidden) savePosNow(); });
 
 /* ---------- reading-time estimate ---------- */
 let chapterWords=0;
@@ -355,6 +457,46 @@ $('content').addEventListener('click',e=>{
 });
 $('previewBtn').onclick=()=>bridge&&bridge.post({cmd:'preview',text:'This is how I sound. I hope you enjoy reading with me.',voice:($('voiceSel').value||''),rate:prefs.rate});
 
+/* ---------- text rules (applied by the app when it speaks; the page text is never changed) ---------- */
+let rules=[], rulesT=null;
+function commitRules(){
+  clearTimeout(rulesT);
+  rulesT=setTimeout(()=>{ bridge&&bridge.post({cmd:'saveRules',rules:rules.filter(r=>(r.find||'').trim())}); },250);
+}
+function renderRules(){
+  const box=$('rulesList'); box.innerHTML='';
+  $('rulesEmpty').style.display=rules.length?'none':'block';
+  rules.forEach((r,i)=>{
+    const d=document.createElement('div'); d.className='rule';
+    const mk=(ph,val,fn)=>{ const e=document.createElement('input'); e.type='text'; e.placeholder=ph; e.value=val||''; e.autocomplete='off'; e.autocapitalize='off'; e.spellcheck=false; e.oninput=()=>fn(e.value); return e; };
+    d.appendChild(mk('Word or phrase  (e.g. Fang Yuan)',r.find,v=>{ r.find=v; commitRules(); }));
+    d.appendChild(mk('Read it as…  (leave blank to skip it)',r.repl,v=>{ r.repl=v; commitRules(); }));
+    const foot=document.createElement('div'); foot.className='rfoot';
+    const lab=document.createElement('label'); lab.className='chk';
+    const c=document.createElement('input'); c.type='checkbox'; c.checked=!!r.any; c.onchange=()=>{ r.any=c.checked; commitRules(); };
+    const t=document.createElement('span'); t.textContent='Match inside words too  (Fang Yuan’s, Fang Yuans…)';
+    lab.appendChild(c); lab.appendChild(t); foot.appendChild(lab);
+    const del=document.createElement('button'); del.className='del'; del.textContent='Delete';
+    del.onclick=()=>{ rules.splice(i,1); renderRules(); commitRules(); };
+    foot.appendChild(del); d.appendChild(foot); box.appendChild(d);
+  });
+}
+$('rulesBtn').onclick=()=>{ togglePanel(''); $('rulesPane').classList.add('on'); renderRules(); };
+$('rulesBack').onclick=()=>{ $('rulesPane').classList.remove('on'); };
+$('addRule').onclick=()=>{
+  rules.push({find:'',repl:'',any:false}); renderRules();
+  const ins=$('rulesList').querySelectorAll('.rule'); const last=ins[ins.length-1];
+  if(last){ last.scrollIntoView({block:'nearest'}); const f=last.querySelector('input[type=text]'); if(f) f.focus(); }
+};
+// Android back: close an open panel / the rules page first; only when none is open does back leave the book
+window.ngBack=function(){
+  if(window.ngImgClose&&window.ngImgClose()) return true;
+  if($('rulesPane').classList.contains('on')){ $('rulesPane').classList.remove('on'); return true; }
+  if($('speakPane').classList.contains('on')){ $('speakBack').click(); return true; }
+  if($('shade').classList.contains('on')){ togglePanel(''); return true; }
+  return false;
+};
+
 /* ---------- voices ---------- */
 function langList(){ const s=new Set(); voices.forEach(v=>v.lang&&s.add(v.lang)); const a=Array.from(s).sort(); return a.length?a:['en-US']; }
 function fillLang(){
@@ -379,6 +521,102 @@ function fillVoices(){
 $('langSel').addEventListener('change',e=>{ prefs.lang=e.target.value; savePrefs(); fillVoices(); });
 $('voiceSel').addEventListener('change',e=>{ prefs.voice=e.target.value; savePrefs(); });
 
+
+/* ---------- image viewer: tap an illustration → full screen; pinch / double-tap to zoom, drag to pan ---------- */
+(function(){
+  const v=$('imgView'), im=$('ivImg'), hint=$('ivHint');
+  let open=false, s=1, x=0, y=0, fit=1, nw=0, nh=0, vw=0, vh=0, travel=0, lastTap=0, lastX=0, lastY=0, g=null;
+  const MAXZ=8, ptrs=new Map();
+  function apply(anim){ im.style.transition=anim?'transform .22s ease-out':'none'; im.style.transform='translate('+x+'px,'+y+'px) scale('+s+')'; }
+  function clamp(){
+    const w=nw*s, h=nh*s;
+    x = w<=vw ? (vw-w)/2 : Math.min(0,Math.max(vw-w,x));
+    y = h<=vh ? (vh-h)/2 : Math.min(0,Math.max(vh-h,y));
+  }
+  function reset(anim){ s=fit; x=(vw-nw*s)/2; y=(vh-nh*s)/2; apply(anim); }
+  function zoomAt(ns,cx,cy,anim){
+    ns=Math.max(fit,Math.min(fit*MAXZ,ns)); const k=ns/s;
+    x=cx-(cx-x)*k; y=cy-(cy-y)*k; s=ns; clamp(); apply(anim);
+  }
+  function openImg(src){
+    open=true; ptrs.clear(); g=null;
+    v.classList.add('show');
+    vw=v.clientWidth||innerWidth; vh=v.clientHeight||innerHeight;
+    hint.style.opacity='1'; clearTimeout(hint._t); hint._t=setTimeout(()=>{ hint.style.opacity='0'; },2600);
+    im.style.visibility='hidden';
+    im.onload=()=>{
+      nw=im.naturalWidth||vw; nh=im.naturalHeight||vh;
+      im.style.width=nw+'px'; im.style.height=nh+'px';
+      fit=Math.min(vw/nw,vh/nh); reset(false);
+      im.style.visibility='visible';
+      requestAnimationFrame(()=>v.classList.add('vis'));
+    };
+    im.src=src;
+  }
+  function closeImg(){
+    if(!open) return; open=false; ptrs.clear(); g=null;
+    v.classList.remove('vis');
+    setTimeout(()=>{ if(!open){ v.classList.remove('show'); im.removeAttribute('src'); } },190);
+  }
+  window.ngImgClose=function(){ if(!open) return false; closeImg(); return true; };
+
+  $('content').addEventListener('click',e=>{
+    const t=e.target;
+    if(!t||t.tagName!=='IMG'||!t.src) return;
+    if((t.naturalWidth||0)<40&&(t.naturalHeight||0)<40) return;     // inline icons / emoji, not an illustration
+    e.stopPropagation(); e.preventDefault();
+    openImg(t.src);
+  },true);
+  $('ivClose').addEventListener('click',e=>{ e.stopPropagation(); closeImg(); });
+  $('ivClose').addEventListener('pointerdown',e=>e.stopPropagation());
+
+  function pair(){ const a=Array.from(ptrs.values()), p=a[0], q=a[1];
+    return {d:Math.hypot(p.x-q.x,p.y-q.y)||1, mx:(p.x+q.x)/2, my:(p.y+q.y)/2}; }
+
+  v.addEventListener('pointerdown',e=>{
+    if(!open) return;
+    try{ v.setPointerCapture(e.pointerId); }catch(_){}
+    ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(ptrs.size===1) travel=0;
+    if(ptrs.size>=2) g=pair();
+  });
+  v.addEventListener('pointermove',e=>{
+    if(!open||!ptrs.has(e.pointerId)) return;
+    const prev=ptrs.get(e.pointerId);
+    ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(ptrs.size===1){
+      const dx=e.clientX-prev.x, dy=e.clientY-prev.y;
+      travel+=Math.abs(dx)+Math.abs(dy);
+      x+=dx; y+=dy; apply(false);
+    } else if(g){
+      const n=pair(); travel+=99;
+      const ns=Math.max(fit*0.6,Math.min(fit*MAXZ*1.25,s*n.d/g.d)), k=ns/s;
+      x=n.mx-(g.mx-x)*k; y=n.my-(g.my-y)*k; s=ns; g=n; apply(false);
+    }
+  });
+  function end(e){
+    if(!open||!ptrs.has(e.pointerId)) return;
+    ptrs.delete(e.pointerId);
+    if(ptrs.size>=2) g=pair(); else g=null;
+    if(ptrs.size>0) return;
+    const now=Date.now();
+    if(travel<10 && e.type==='pointerup'){                            // a tap
+      if(now-lastTap<320 && Math.hypot(e.clientX-lastX,e.clientY-lastY)<40){
+        lastTap=0;
+        if(s>fit*1.08) reset(true); else zoomAt(fit*2.5,e.clientX,e.clientY,true);
+        return;
+      }
+      lastTap=now; lastX=e.clientX; lastY=e.clientY;
+    }
+    if(s<fit) { reset(true); return; }
+    clamp(); apply(true);                                             // spring back inside the screen
+  }
+  v.addEventListener('pointerup',end);
+  v.addEventListener('pointercancel',end);
+  v.addEventListener('wheel',e=>{ if(!open) return; e.preventDefault(); zoomAt(s*(e.deltaY<0?1.2:1/1.2),e.clientX,e.clientY,false); },{passive:false});
+  addEventListener('resize',()=>{ if(open&&nw){ vw=v.clientWidth; vh=v.clientHeight; fit=Math.min(vw/nw,vh/nh); reset(false); } });
+})();
+
 /* ---------- bridge ---------- */
 window.ngOnMessage=function(m){
   if(!m||!m.type) return;
@@ -386,6 +624,7 @@ window.ngOnMessage=function(m){
   else if(m.type==='theme'){ document.documentElement.dataset.theme = m.theme||'dark'; }
   else if(m.type==='chapter') onChapter(m);
   else if(m.type==='voices'){ voices=m.list||[]; fillLang(); fillVoices(); }
+  else if(m.type==='rules'){ if(!$('rulesPane').classList.contains('on')) rules=(m.list||[]).map(r=>({find:r.find||'',repl:r.repl||'',any:!!r.any})); }
   else if(m.type==='ttschapter'){ displayChapter(m.idx); }
   else if(m.type==='ttspos'){ if(m.chapter===cur) applyHighlight(m.para); else pendingPos=m; }
   else if(m.type==='ttsstate'){ playing=!!m.playing; setPlayIcon(playing); if(m.stopped){ setBar(false); clearHighlight(); } else setBar(true); updateTime(); }
@@ -394,7 +633,7 @@ window.ngOnMessage=function(m){
   else if(m.type==='ttserr'){ toast('Voice error: '+(m.err||'')); if(m.id!=='preview'){ playing=false; setBar(false); clearHighlight(); } }
 };
 setPlayIcon(false);
-if(bridge) bridge.post({cmd:'ready'}); else $('loading').textContent='This page must run inside NovelGrabber.';
+if(bridge) bridge.post({cmd:'ready'}); else $('loading').textContent='This page must run inside Novel Vibe.';
 applyPrefs();
 </script>
 </body>

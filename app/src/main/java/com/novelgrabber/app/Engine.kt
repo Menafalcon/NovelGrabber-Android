@@ -21,13 +21,44 @@ import kotlin.coroutines.resume
  * SPA stale-content guard so the same chapter is never saved twice.
  */
 class Engine(
-    private val web: WebView,
+    private var web: WebView,
     private val log: (String) -> Unit,
     private val friendly: (String) -> Unit,
     private val progress: (Int, Int) -> Unit,
     private val finished: (String) -> Unit
 ) {
     companion object {
+        /**
+         * NovelUpdates' Tags / Genres pickers are normally type-to-search boxes, but when the site's own
+         * widget script doesn't run inside the WebView they degrade to a plain multi-select list of hundreds
+         * of tags. This adds a filter box above any such VISIBLE long multi-select (a working widget hides
+         * the original <select>, so those are skipped). Selected tags always stay listed, and the form still
+         * submits the real <select>, so search results are unaffected.
+         */
+        const val TAG_SEARCH_JS = """(function(){
+  function enhance(){
+    document.querySelectorAll('select[multiple]').forEach(function(s){
+      if (s.dataset.ngSearch || s.options.length < 30 || !s.offsetParent) return;
+      s.dataset.ngSearch = '1';
+      var inp = document.createElement('input');
+      inp.type = 'search'; inp.placeholder = 'Type to filter tags…'; inp.autocomplete = 'off';
+      inp.style.cssText = 'width:100%;box-sizing:border-box;padding:12px;margin:0 0 6px;font-size:16px;border:1px solid #bbb;border-radius:6px;';
+      s.parentNode.insertBefore(inp, s);
+      s.size = 8;
+      s.style.setProperty('height', '220px', 'important');
+      s.style.setProperty('width', '100%', 'important');
+      inp.addEventListener('input', function(){
+        var q = inp.value.trim().toLowerCase();
+        for (var i = 0; i < s.options.length; i++) {
+          var o = s.options[i];
+          var show = !q || o.selected || o.text.toLowerCase().indexOf(q) >= 0;
+          o.hidden = !show; o.style.display = show ? '' : 'none';
+        }
+      });
+    });
+  }
+  enhance(); setTimeout(enhance, 1500);
+})();"""
         const val UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
     }
 
@@ -46,13 +77,21 @@ class Engine(
             loadsImagesAutomatically = true
             mediaPlaybackRequiresUserGesture = true
         }
+        // keep the page's renderer at full priority even when the app is in the background,
+        // otherwise Android may starve it while a download runs with the screen off
+        if (android.os.Build.VERSION.SDK_INT >= 26) web.setRendererPriorityPolicy(WebView.RENDERER_PRIORITY_IMPORTANT, false)
         // keep login sessions (NovelUpdates etc.) across app restarts
         android.webkit.CookieManager.getInstance().apply {
             setAcceptCookie(true)
             setAcceptThirdPartyCookies(web, true)
         }
         web.webViewClient = object : WebViewClient() {
-            override fun onPageFinished(view: WebView?, url: String?) { pageFinished = true }
+            override fun onPageFinished(view: WebView?, url: String?) {
+                pageFinished = true
+                // manual browsing only: give NovelUpdates' plain tag lists a search box (never during a download)
+                if (!running && view != null && (url ?: "").contains("novelupdates.com", true))
+                    view.evaluateJavascript(TAG_SEARCH_JS, null)
+            }
             override fun shouldInterceptRequest(view: WebView?, request: android.webkit.WebResourceRequest?): WebResourceResponse? {
                 val u = request?.url?.toString() ?: return null
                 return if (AdBlock.shouldBlock(u, request.isForMainFrame)) AdBlock.blockedResponse() else null
@@ -62,18 +101,26 @@ class Engine(
 
     fun stop() { job?.cancel() }
 
+    /** The in-app browser WebView is rebuilt when the browser is closed — point the engine at the fresh one. */
+    fun attach(w: WebView) { web = w; pageFinished = false; setup() }
+
     fun start(scope: CoroutineScope, url: String, limitIn: Int) {
         if (running) return
         job = scope.launch(Dispatchers.Main) {
-            try { run(url, limitIn) }
-            catch (e: CancellationException) { friendly("Stopped"); log("Cancelled by user."); finished("stopped") }
-            catch (e: Exception) { friendly("Something went wrong — open details"); log("Error: ${e.message}"); finished("error") }
+            var outcome = "done"
+            try { outcome = run(url, limitIn) }
+            catch (e: CancellationException) { friendly("Stopped"); log("Cancelled by user."); outcome = "stopped" }
+            catch (e: Exception) { friendly("Something went wrong — open details"); log("Error: ${e.message}"); outcome = "error" }
+            finally {
+                job = null
+                finished(outcome)
+            }
         }
     }
 
     // ---------------- main flow ----------------
 
-    private suspend fun run(start: String, limitIn: Int) {
+    private suspend fun run(start: String, limitIn: Int): String {
         val uri = Uri.parse(start)
         var limit = limitIn
         if (limit <= 0) limit = 1_000_000
@@ -84,7 +131,7 @@ class Engine(
         friendly("Opening the page…")
         log("Opening $start")
         val first = navExtract(start, rule, null)
-        if (first == null) { friendly("Couldn't read that page"); log("No response from page."); finished("error"); return }
+        if (first == null) { friendly("Couldn't read that page"); log("No response from page."); return "error" }
 
         var novelTitle = first.optString("novelTitle").ifBlank {
             Library.cleanNovelTitle(first.optString("ogTitle").ifBlank { first.optString("docTitle") })
@@ -112,7 +159,7 @@ class Engine(
                 val tr = navExtractList(start, rule)
                 if (tr != null && meta.cover.isBlank()) tryDownloadCover(meta, tr.optString("ogImage"))
                 val list = filterToNovel(chapterLinks(tr), novelSlug)
-                if (list.isEmpty()) { friendly("Couldn't load the chapter list"); log("No chapters found."); Library.save(meta); finished("done"); return }
+                if (list.isEmpty()) { friendly("Couldn't load the chapter list"); log("No chapters found."); Library.save(meta); return "done" }
                 startChap = sortAscending(list).first().second
             }
             friendly("Downloading… (clicking through chapters)")
@@ -150,7 +197,7 @@ class Engine(
         Library.save(meta)
         friendly(if (added > 0) "Finished — $added new chapter(s) saved ✓" else "Nothing new to download")
         log("Done. +$added new, ${meta.chapters.size} total.")
-        finished("done")
+        return "done"
     }
 
     // ---------------- modes ----------------

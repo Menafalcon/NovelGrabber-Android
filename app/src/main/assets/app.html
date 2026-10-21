@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>NovelGrabber</title>
+<title>Novel Vibe</title>
 <style>
 :root{
   --bg:#0f1116; --surface:#171a21; --card:#1e222b; --hover:#252b36; --border:#282e39;
@@ -36,8 +36,7 @@ header{display:flex;align-items:center;gap:9px;padding:14px 18px 6px;flex-shrink
 header .dot{width:11px;height:11px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent)}
 header .t{font-weight:600;font-size:18px;letter-spacing:.2px;flex:1}
 .tabs{display:flex;gap:9px;padding:0 18px 12px;flex-shrink:0}
-.tab{flex:1;height:42px;background:var(--card);color:var(--sub);border-radius:14px;font-size:14px;font-weight:600;transition:all .18s}
-.tab:active{transform:scale(.97)}
+.tab{flex:1;height:42px;background:var(--card);color:var(--sub);border-radius:14px;font-size:14px;font-weight:600}
 .tab.on{background:var(--accent);color:#fff;box-shadow:0 6px 18px var(--glow)}
 
 .page{flex:1;overflow-y:auto;padding:2px 18px 28px;display:none}
@@ -58,8 +57,23 @@ input:focus{border-color:var(--accent)}
 #substatus{font-size:12px;color:var(--sub);min-height:16px;word-break:break-all}
 .pwrap{height:7px;background:var(--border);border-radius:5px;overflow:hidden;margin:12px 0 6px}
 #pbar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),#8aa0ff);transition:width .25s;border-radius:5px}
-.subrow{display:flex;gap:10px;margin-top:12px;align-items:center}
+.subrow{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;align-items:center}
+.subrow .btn{height:38px;padding:0 12px;font-size:12.5px;flex:1 1 auto}
 #peekBtn{display:none}
+.qhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.qhead .qt{font-size:11px;letter-spacing:1.3px;text-transform:uppercase;color:var(--sub);font-weight:600}
+.qhead .qclear{background:none;color:var(--sub);font-size:12px;font-weight:600;padding:4px 8px;border-radius:8px}
+.qhead .qclear:active{background:var(--hover)}
+.qitem{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:11px 12px;margin-bottom:8px}
+.qitem .qi{flex:1;min-width:0}
+.qitem .qtitle{font-weight:600;font-size:13.5px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;unicode-bidi:plaintext}
+.qitem .qcnt{font-size:12px;color:var(--sub);font-weight:600;flex-shrink:0}
+.qbadge{font-size:11px;font-weight:700;padding:4px 9px;border-radius:9px;flex-shrink:0;white-space:nowrap}
+.qbadge.queue{background:rgba(144,153,169,.16);color:var(--sub);border:1px solid color-mix(in srgb,var(--sub) 35%,transparent)}
+.qbadge.scraping{background:rgba(245,158,11,.18);color:#f59e0b;border:1px solid rgba(245,158,11,.45)}
+.qbadge.done{background:rgba(34,197,94,.18);color:#22c55e;border:1px solid rgba(34,197,94,.45)}
+.qdel{width:26px;height:26px;border-radius:8px;background:transparent;color:var(--sub);font-size:13px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.qdel:active{background:var(--hover);color:var(--danger)}
 #logwrap{display:none;margin-top:12px}
 #log{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:11px;font-family:monospace;font-size:11px;color:#cbd2dd;height:150px;overflow-y:auto;white-space:pre-wrap;word-break:break-all}
 .hint{font-size:11.5px;color:var(--sub);line-height:1.55;margin-top:10px}
@@ -103,6 +117,20 @@ input:focus{border-color:var(--accent)}
 .catchip{flex:0 0 auto;height:36px;padding:0 15px;border-radius:18px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
 .catchip.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .catchip .cnt{opacity:.65;font-weight:400}
+.novel .nt,.serhead .st,.lrt .t,#libSearch{unicode-bidi:plaintext}
+.novel.series{cursor:pointer;position:relative;background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 12%,var(--card)),color-mix(in srgb,var(--text) 8%,var(--card)));border:2px solid color-mix(in srgb,var(--accent) 72%,var(--border));box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 22%,transparent),var(--shadow)}
+.novel.series .tag{position:absolute;top:10px;right:12px;font-size:9.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--accent);background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);padding:2px 7px;border-radius:7px;pointer-events:none}
+.novel.series .nt{padding-right:88px}
+.serhead{display:flex;align-items:center;gap:10px;margin:0 0 12px}
+.serhead .st{flex:1;min-width:0;font-weight:600;font-size:15px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.serhead .st span{display:block;font-weight:400;font-size:11.5px;color:var(--sub);margin-top:2px}
+.serhead .chip{flex:0 0 auto}
+#sortModal{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+#sortModal.on{display:flex;animation:fade .18s ease}
+#sortModal .sbox{background:var(--card);border:1.5px solid var(--border);border-radius:20px;padding:20px 26px;display:flex;align-items:center;gap:15px;box-shadow:var(--shadow);min-width:210px}
+#sortModal .spin{width:24px;height:24px;border-radius:50%;border:3px solid var(--border);border-top-color:var(--accent);animation:rot .75s linear infinite!important;flex-shrink:0}
+#sortModal .stxt{font-size:15px;font-weight:600;color:var(--text)}
+@keyframes rot{to{transform:rotate(360deg)}}
 .librow .btn{flex:1;height:42px;font-size:12.5px;padding:0 8px}
 #empty{text-align:center;color:var(--sub);padding:50px 10px;font-size:13px;line-height:1.8}
 .tab.gear{flex:0 0 46px;font-size:18px;padding:0}
@@ -125,11 +153,27 @@ input:focus{border-color:var(--accent)}
 .setbtn.danger{color:var(--danger);border-color:color-mix(in srgb,var(--danger) 45%,var(--border))}
 #toast{position:fixed;left:50%;bottom:calc(26px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--surface);border:1px solid var(--border);color:var(--text);padding:11px 20px;border-radius:14px;font-size:13px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .25s;z-index:60;max-width:82vw}
 #toast.show{opacity:1}
+
+/* ---- motion ---- */
+@keyframes rise{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes pulse{0%,100%{box-shadow:0 0 6px var(--accent);transform:scale(1)}50%{box-shadow:0 0 16px var(--accent);transform:scale(1.25)}}
+@keyframes shimmer{from{background-position:200% 0}to{background-position:-200% 0}}
+@keyframes pop{0%{transform:scale(.6)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
+header .dot{animation:pulse 2.6s ease-in-out infinite}
+.enter{animation:rise .42s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0)*38ms)}
+.novel,.lrow,.catchip,.themebtn,.setrow{transition:transform .12s,background .2s,border-color .2s}
+.novel:active,.lrow:active{transform:scale(.985)}
+.catchip:active{transform:scale(.94)}
+.lbar i{transition:width .5s cubic-bezier(.2,.8,.2,1)}
+#pbar.busy{background:linear-gradient(90deg,var(--accent),#b4c3ff,var(--accent));background-size:200% 100%;animation:shimmer 1.6s linear infinite}
+#toast{transform:translate(-50%,18px);transition:opacity .22s,transform .28s cubic-bezier(.2,.8,.2,1)}
+#toast.show{transform:translate(-50%,0)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
 
-<header><span class="dot"></span><span class="t">NovelGrabber</span></header>
+<header><span class="dot"></span><span class="t">Novel Vibe</span></header>
 <div class="tabs">
   <button class="tab on" id="tabDl">Download</button>
   <button class="tab" id="tabLib">Library</button>
@@ -153,15 +197,29 @@ input:focus{border-color:var(--accent)}
     <div class="pwrap"><div id="pbar"></div></div>
     <div id="substatus">Paste a link above, then tap Download.</div>
     <div class="subrow">
-      <button class="btn ghost" id="peekBtn" style="height:38px;font-size:12.5px">🌐 Show website</button>
-      <button class="btn ghost" id="details" style="height:38px;font-size:12.5px">Show details</button>
-      <button class="btn ghost" id="sitesBtn" style="height:38px;font-size:12.5px">Sites ▾</button>
-      <button class="btn ghost" id="nuBtn" style="height:38px;font-size:12.5px"><img src="https://www.novelupdates.com/favicon.ico" style="width:15px;height:15px;border-radius:3px" onerror="this.remove()"> NovelUpdates</button>
+      <button class="btn ghost" id="peekBtn">🌐 Show website</button>
+      <button class="btn ghost" id="details">Show details</button>
+      <button class="btn ghost" id="sitesBtn">Sites ▾</button>
+      <button class="btn ghost" id="nuBtn"><img src="https://www.novelupdates.com/favicon.ico" style="width:15px;height:15px;border-radius:3px" onerror="this.remove()"> NovelUpdates</button>
     </div>
     <div id="sitesMenu" style="display:none"></div>
     <div id="logwrap"><div id="log"></div></div>
     <div class="hint">If a Cloudflare or login page appears, tap <b>Show website</b> to solve it, then
-      tap <b>Back to app</b> — the download continues.</div>
+      tap <b>← Back</b> or <b>✕ Close</b> — the download continues.</div>
+  </div>
+
+  <div class="setrow" id="qModeRow" style="margin-bottom:14px;cursor:pointer">
+    <div class="lbl">Queued Scrape<div class="sub">Add novels from sites to a queue and scrape them in order</div></div>
+    <div class="switch" id="qModeSw"><i></i></div>
+  </div>
+
+  <div class="cardbox" id="queueBox" style="display:none">
+    <div class="qhead">
+      <span class="qt">Scrape Queue</span>
+      <button class="qclear" id="qClearBtn">Clear</button>
+    </div>
+    <div id="queueList"></div>
+    <button class="btn" id="qStartBtn" style="width:100%;margin-top:6px">Start</button>
   </div>
 </div>
 
@@ -185,19 +243,21 @@ input:focus{border-color:var(--accent)}
   <div class="setsec">
     <h3>On import</h3>
     <div class="setrow">
-      <div class="lbl">Auto-sort new books into series<div class="sub">Files a new download under a matching series</div></div>
+      <div class="lbl">Auto-sort new books into collections<div class="sub">Groups matching books (e.g. volumes) into one collection card</div></div>
       <div class="switch" id="autoSw"><i></i></div>
     </div>
   </div>
   <div class="setsec">
     <h3>Library</h3>
     <button class="setbtn" id="setAutoNow">⚡ Auto sort now</button>
+    <button class="setbtn" id="setImport">📥 Import folder (EPUB &amp; PDF)</button>
     <button class="setbtn" id="setOpenEpub">Open EPUB file</button>
     <button class="setbtn" id="setSpeak">🔊 Read text aloud</button>
     <button class="setbtn danger" id="setDelAll">Delete all novels</button>
   </div>
 </div>
 
+<div id="sortModal"><div class="sbox"><div class="spin"></div><div class="stxt">Sorting books…</div></div></div>
 <div id="toast"></div>
 
 <script>
@@ -207,8 +267,9 @@ const send=o=>{ try{ NG.msg(JSON.stringify(o)); }catch(e){} };
 function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),3000); }
 function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 const SVG_PLAY='<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
+const SVG_SPEAKER='<svg viewBox="0 0 24 24"><path d="M3 10v4h4l5 5V5L7 10H3zm13.5 2a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z"/></svg>';
 
-let lastFolder='', autoSortOn=false;
+let lastFolder='', autoSortOn=false, ttsFolder='';   // ttsFolder = the novel currently reading aloud
 
 function showPage(p){   // 'dl' | 'lib' | 'set'
   $('pageDl').classList.toggle('on',p==='dl');
@@ -217,7 +278,8 @@ function showPage(p){   // 'dl' | 'lib' | 'set'
   $('tabDl').classList.toggle('on',p==='dl');
   $('tabLib').classList.toggle('on',p==='lib');
   $('tabSet').classList.toggle('on',p==='set');
-  if(p==='lib') send({cmd:'lib'});
+  if(p!=='lib'&&openSeries){ setSeries(null); renderList(); libScroll=listScroll; }
+  if(p==='lib'){ restoreScroll(libScroll); send({cmd:'lib'}); }
   if(p==='set') renderSettings();
 }
 const tab=dl=>showPage(dl?'dl':'lib');   // legacy callers (scrapeFrom)
@@ -235,18 +297,99 @@ document.querySelectorAll('#themeGrid .themebtn').forEach(b=>{
   b.onclick=()=>{ document.documentElement.dataset.theme=b.dataset.th; send({cmd:'setTheme',theme:b.dataset.th}); renderSettings(); };
 });
 $('autoSw').onclick=()=>{ autoSortOn=!autoSortOn; send({cmd:'setAutoSort',on:autoSortOn}); renderSettings(); };
-$('setAutoNow').onclick=()=>send({cmd:'autoSort'});
+function showSorting(on){ $('sortModal').classList.toggle('on',!!on); }
+$('setAutoNow').onclick=()=>{ showSorting(true); send({cmd:'autoSort'}); };
+$('setImport').onclick=()=>send({cmd:'importFolder'});
 $('setOpenEpub').onclick=()=>send({cmd:'openEpub'});
 $('setSpeak').onclick=()=>send({cmd:'speakText'});
 $('setDelAll').onclick=()=>{ if(confirm('Delete ALL novels and files? This cannot be undone.')) send({cmd:'deleteAll'}); };
 
-let busy=false;
-function setBusy(b){ busy=b; $('go').disabled=b; $('stop').disabled=!b; $('url').disabled=b; $('count').disabled=b;
-  $('peekBtn').style.display=b?'inline-flex':'none'; if(!b)$('pbar').style.width='0'; }
+let busy=false, queuedMode=false, scrapeQueue=[], queueRunning=false, qSeq=1;
+function setBusy(b){ busy=b; $('pbar').classList.toggle('busy',b); $('go').disabled=b&&!queuedMode; $('stop').disabled=!b; $('url').disabled=b&&!queuedMode; $('count').disabled=b&&!queuedMode;
+  $('peekBtn').style.display=b?'inline-flex':'none'; if(!b)$('pbar').style.width='0'; renderQueue(); }
+
+function slugTitleFromUrl(u){
+  try{
+    const p=new URL(u).pathname.replace(/\/chapter[-/_]?\d+.*$/i,'').replace(/-chapter-\d+.*$/i,'').replace(/\/\d+(\.html?)?\/?$/i,'').replace(/^\/+|\/+$/g,'');
+    const skip=['novel','book','b','series','read','chapter','chapters'];
+    const seg=p.split('/').find(s=>s&&!skip.includes(s.toLowerCase()))||p||new URL(u).hostname;
+    return seg.replace(/[-_]+/g,' ').trim().replace(/\b\w/g,c=>c.toUpperCase())||u;
+  }catch(e){ return u; }
+}
+function addToQueue(url,count,title){
+  const cnt=Math.max(0,parseInt(count||'0',10)||0);
+  const cleanTitle=(title||'').trim()||slugTitleFromUrl(url);
+  scrapeQueue.push({id:qSeq++,url,count:cnt,done:0,total:cnt,title:cleanTitle,status:'queue'});
+  renderQueue();
+  toast('Added “'+cleanTitle+'” to queue');
+}
+function renderQueue(){
+  const box=$('queueBox'), list=$('queueList');
+  if(!box||!list) return;
+  if(!scrapeQueue.length){ box.style.display='none'; return; }
+  box.style.display='block';
+  list.innerHTML='';
+  scrapeQueue.forEach(it=>{
+    const row=document.createElement('div'); row.className='qitem';
+    const stTxt=it.status==='done'?'Done':it.status==='scraping'?'Scraping':'In queue';
+    const totTxt=it.total>0?it.total:(it.count>0?it.count:'All');
+    row.innerHTML='<div class="qi"><div class="qtitle" dir="auto">'+esc(it.title)+'</div></div>'+
+      '<div class="qcnt">'+it.done+'/'+totTxt+'</div>'+
+      '<span class="qbadge '+it.status+'">'+stTxt+'</span>'+
+      (it.status==='scraping'?'':'<button class="qdel" title="Remove">✕</button>');
+    const del=row.querySelector('.qdel');
+    if(del) del.onclick=()=>{ scrapeQueue=scrapeQueue.filter(x=>x.id!==it.id); renderQueue(); };
+    list.appendChild(row);
+  });
+  const hasQueued=scrapeQueue.some(x=>x.status==='queue');
+  const isScraping=scrapeQueue.some(x=>x.status==='scraping');
+  const sb=$('qStartBtn');
+  sb.disabled=busy||isScraping||!hasQueued;
+  sb.textContent=isScraping?'Scraping…':hasQueued?'Start':'All Done';
+}
+function runNextInQueue(){
+  if(busy) return;
+  const next=scrapeQueue.find(x=>x.status==='queue');
+  if(!next){ queueRunning=false; renderQueue(); return; }
+  queueRunning=true;
+  next.status='scraping';
+  next.done=0;
+  $('url').value=next.url;
+  $('count').value=next.count;
+  $('log').textContent='';
+  $('pbar').style.width='0%';
+  $('status').textContent='Opening “'+next.title+'”…';
+  $('substatus').textContent=next.url;
+  setBusy(true);
+  renderQueue();
+  send({cmd:'start',url:next.url,count:next.count});
+}
+$('qModeRow').onclick=()=>{
+  queuedMode=!queuedMode;
+  $('qModeSw').classList.toggle('on',queuedMode);
+  $('go').textContent=queuedMode?'Add to Queue':'Download';
+  $('go').disabled=busy&&!queuedMode;
+  $('url').disabled=busy&&!queuedMode;
+  $('count').disabled=busy&&!queuedMode;
+  send({cmd:'setQueuedMode',on:queuedMode});
+};
+$('qStartBtn').onclick=()=>runNextInQueue();
+$('qClearBtn').onclick=()=>{
+  if(busy&&scrapeQueue.some(x=>x.status==='scraping')) scrapeQueue=scrapeQueue.filter(x=>x.status==='scraping');
+  else scrapeQueue=[];
+  renderQueue();
+};
+
 $('go').onclick=()=>{
   const url=$('url').value.trim();
   if(!/^https?:\/\//i.test(url)){ toast('Paste a full link starting with http'); return; }
-  setBusy(true); $('log').textContent=''; send({cmd:'start',url,count:parseInt($('count').value||'0',10)});
+  const cnt=parseInt($('count').value||'0',10)||0;
+  if(queuedMode){
+    addToQueue(url,cnt,'');
+    $('url').value='';
+    return;
+  }
+  setBusy(true); $('log').textContent=''; send({cmd:'start',url,count:cnt});
 };
 $('stop').onclick=()=>send({cmd:'stop'});
 $('peekBtn').onclick=()=>send({cmd:'peek'});
@@ -261,8 +404,7 @@ const SITES=[
   ['NovelHall','https://novelhall.com'],
   ['KAT Reading Cafe','https://katreadingcafe.com'],
   ['Novelpia (Global)','https://global.novelpia.com'],
-  ['Novel Arrow','https://novelarrow.com'],
-  ['Light Novel World','https://www.lightnovelworld.com'],
+  ['Novel Ping','https://novelping.com/'],
   ['NovelFull','https://novelfull.net'],
 ];
 (function(){
@@ -276,15 +418,18 @@ const SITES=[
   $('nuBtn').onclick=()=>send({cmd:'openSite',url:'https://www.novelupdates.com'});
 })();
 
-function novelCard(n,isCont){
+function novelCard(n,isCont,inSeries){
   const d=document.createElement('div'); d.className='novel'+(isCont?' cont':'');
   const pct=n.pct||0;
-  d.innerHTML=(n.cover?('<img src="'+esc(n.cover)+'" alt="" loading="lazy">'):'<div class="noimg">📖</div>')+
-    '<div class="info"><div class="nt">'+(isCont?'▸ ':'')+esc(n.title)+'</div>'+
+  d.innerHTML=(n.cover?('<img src="'+esc(n.cover)+'" alt="" loading="lazy" decoding="async">'):'<div class="noimg">📖</div>')+
+    '<div class="info"><div class="nt" dir="auto">'+(isCont?'▸ ':'')+esc(n.title)+'</div>'+
     '<div class="ns">'+n.chapters+' ch · '+esc(n.site||'library')+' · '+esc(n.updated)+'</div>'+
     '<div class="npr"><div class="lbar"><i style="width:'+pct+'%"></i></div><span>'+pct+'%</span></div>'+
     '<div class="acts">'+
-      '<button class="chip play grow" data-a="read">'+SVG_PLAY+'Read</button>'+
+      (n.folder&&n.folder===ttsFolder
+        ? '<button class="chip play grow" data-a="returnBook">'+SVG_SPEAKER+'Return to book</button>'
+        : '<button class="chip play grow" data-a="read">'+SVG_PLAY+'Read</button>')+
+      (inSeries?'<button class="chip" data-a="removeFromSeries" title="Remove from collection">Remove</button>':'')+
       '<button class="chip more" data-a="novelMenu">⋯</button>'+
     '</div></div>';
   d.addEventListener('click',e=>{
@@ -295,15 +440,85 @@ function novelCard(n,isCont){
 }
 
 let lastList=[], lastCats=[], lastEpubs=[], lastPdfs=[];
-let selCat=localStorage.getItem('selCat')||'General';
+let selCat=localStorage.getItem('selCat')||'All';
+if(!['All','Recent','Completed','fmt:epub','fmt:pdf'].includes(selCat)) selCat='All';   // old category shelves are series cards now
 let libQ='';
+let openSeries=null;   // name of the series card whose books are showing (null = the normal list)
 
 function inCat(n,cat){
   if(cat==='All') return true;
-  if(cat==='General') return !n.cat||n.cat==='General';
-  return (n.cat||'').toLowerCase()===cat.toLowerCase();
+  if(cat==='Recent') return (n.read||0)>0;      // opened with Read at least once
+  if(cat==='Completed') return !!n.completed;
+  return false;
 }
-function matchQ(n){ return !libQ||(n.title||'').toLowerCase().includes(libQ); }
+function matchQ(n){ return !libQ||(n.title||'').toLowerCase().includes(libQ)||(n.cat||'').toLowerCase().includes(libQ); }
+
+/* ---- series: books that share a category collapse into ONE card in All / Recent / Completed ---- */
+const natTitle=(a,b)=>(a.title||'').localeCompare(b.title||'',undefined,{numeric:true,sensitivity:'base'});
+function plural(n,w){ return n+' '+w+(n===1?'':'s'); }
+function groupItems(books){
+  const total={};
+  lastList.forEach(n=>{ if(n.cat){ const k=n.cat.toLowerCase(); total[k]=(total[k]||0)+1; } });
+  const items=[], at={};
+  books.forEach(n=>{
+    const k=(n.cat||'').toLowerCase();
+    if(!k||total[k]<2){ items.push({book:n}); return; }     // a series of one is just a normal book
+    if(at[k]==null){ at[k]=items.length; items.push({series:true,name:n.cat,books:[]}); }
+    items[at[k]].books.push(n);
+  });
+  items.forEach(it=>{
+    if(!it.series) return;
+    it.books.sort(natTitle);
+    it.cover=(it.books.find(b=>b.cover)||{}).cover||'';
+    it.chapters=it.books.reduce((s,b)=>s+(b.chapters||0),0);
+    it.updated=it.books.reduce((m,b)=>(b.updated||'')>m?b.updated:m,'');
+    it.pct=Math.round(it.books.reduce((s,b)=>s+(b.completed?100:(b.pct||0)),0)/it.books.length);
+  });
+  return items;
+}
+function setSeries(name){
+  if(openSeries===name) return;
+  openSeries=name;
+  send({cmd:'seriesOpen',open:!!name});      // lets the system Back gesture close it
+}
+/* ---- scroll memory: the library keeps your place across live refreshes, returning from a book / tab, and leaving a collection ---- */
+let libScroll=0, listScroll=0, scrollLock=false;
+$('pageLib').addEventListener('scroll',()=>{ if(!scrollLock) libScroll=$('pageLib').scrollTop; },{passive:true});
+function restoreScroll(y){
+  const pg=$('pageLib'); libScroll=y; scrollLock=true; pg.scrollTop=y;
+  requestAnimationFrame(()=>{ pg.scrollTop=y; requestAnimationFrame(()=>{ pg.scrollTop=y; scrollLock=false; }); });
+}
+function showSeries(name){ listScroll=libScroll; animNext=true; setSeries(name); renderList(); restoreScroll(0); }
+function leaveSeries(){ animNext=true; setSeries(null); renderList(); restoreScroll(listScroll); }
+
+function seriesCard(g){
+  const d=document.createElement('div'); d.className='novel series';
+  d.innerHTML=(g.cover?('<img src="'+esc(g.cover)+'" alt="" loading="lazy" decoding="async">'):'<div class="noimg">📚</div>')+
+    '<span class="tag">Collection</span><div class="info"><div class="nt">'+esc(g.name)+'</div>'+
+    '<div class="ns">'+plural(g.books.length,'book')+' · '+g.chapters+' ch · '+esc(g.updated)+'</div>'+
+    '<div class="npr"><div class="lbar"><i style="width:'+g.pct+'%"></i></div><span>'+g.pct+'%</span></div>'+
+    '<div class="acts"><button class="chip play grow" data-a="open">'+SVG_PLAY+'Open</button>'+
+    '<button class="chip more" data-a="menu">⋯</button></div></div>';
+  d.addEventListener('click',e=>{
+    const b=e.target.closest('[data-a]');
+    if(b&&b.dataset.a==='menu') send({cmd:'seriesMenu',name:g.name});
+    else showSeries(g.name);          // the Open button or anywhere else on the card
+  });
+  return d;
+}
+
+function renderSeriesView(el,books,stagger){
+  books=books.slice().sort(natTitle);
+  const name=books[0].cat;
+  const h=document.createElement('div'); h.className='serhead';
+  h.innerHTML='<button class="chip">‹ Back</button><div class="st">'+esc(name)+'<span>'+plural(books.length,'book')+'</span></div>'+
+    '<button class="chip more">⋯</button>';
+  h.children[0].onclick=leaveSeries;
+  h.children[2].onclick=()=>send({cmd:'seriesMenu',name});
+  el.appendChild(h);
+  $('empty').style.display='none';
+  books.forEach((n,i)=>el.appendChild(stagger(novelCard(n,false,true),i)));
+}
 
 function chip(label,cnt,on,fn){
   const b=document.createElement('button');
@@ -312,13 +527,13 @@ function chip(label,cnt,on,fn){
   b.onclick=fn;
   $('catbar').appendChild(b);
 }
-function pick(c){ selCat=c; localStorage.setItem('selCat',c); renderCats(); renderList(); }
+function pick(c){ animNext=true; setSeries(null); selCat=c; localStorage.setItem('selCat',c); renderCats(); renderList(); restoreScroll(0); }
 
 function renderCats(){
   $('catbar').innerHTML='';
-  // only the three core shelves stay visible — everything else lives behind ⋯
-  const main=['All','General','Completed'];
-  main.forEach(c=>chip(c,lastList.filter(n=>inCat(n,c)).length,c.toLowerCase()===selCat.toLowerCase(),()=>pick(c)));
+  // only the three core shelves stay visible — everything else (formats, import tools) lives behind ⋯
+  const main=['All','Recent','Completed'];
+  main.forEach(c=>chip(c,groupItems(lastList.filter(n=>inCat(n,c))).length,c.toLowerCase()===selCat.toLowerCase(),()=>pick(c)));
   if(!main.some(c=>c.toLowerCase()===selCat.toLowerCase())){   // a custom/format shelf is active
     const label=selCat==='fmt:epub'?'EPUB files':selCat==='fmt:pdf'?'PDF files':selCat;
     const cnt=selCat==='fmt:epub'?lastEpubs.length:selCat==='fmt:pdf'?lastPdfs.length
@@ -337,41 +552,104 @@ function fileRow(f,pdf){
   return d;
 }
 
+let animNext=true;   // entrance animation: first render and shelf switches only, never on a background refresh
 function renderList(){
   const el=$('list'); el.innerHTML='';
+  const anim=animNext; animNext=false;
+  const stagger=(d,i)=>{ if(anim&&i<10){ d.classList.add('enter'); d.style.setProperty('--i',i); } return d; };
   if(selCat==='fmt:epub'||selCat==='fmt:pdf'){
     const pdf=selCat==='fmt:pdf';
     const files=(pdf?lastPdfs:lastEpubs).filter(f=>!libQ||f.name.toLowerCase().includes(libQ));
-    files.forEach(f=>el.appendChild(fileRow(f,pdf)));
-    $('empty').innerHTML='No '+(pdf?'PDF':'EPUB')+' files yet.<br>Export a novel to create one.';
+    files.forEach((f,i)=>el.appendChild(stagger(fileRow(f,pdf),i)));
+    $('empty').innerHTML='No '+(pdf?'PDF':'EPUB')+' files yet.<br>Export a novel, or import a folder from Settings (nothing is copied — the originals are linked).';
     $('empty').style.display=files.length?'none':'block';
     return;
   }
   const shown=lastList.filter(n=>inCat(n,selCat)&&matchQ(n));
+  // All / other shelves: newest added first (the app sends them that way). Recent: last opened first.
+  if(selCat==='Recent') shown.sort((a,b)=>(b.read||0)-(a.read||0));
+  if(openSeries){                                   // inside a series card: its books, shown as normal cards
+    const k=openSeries.toLowerCase();
+    const inner=shown.filter(n=>(n.cat||'').toLowerCase()===k);
+    if(inner.length){ renderSeriesView(el,inner,stagger); return; }
+    setSeries(null);                                // nothing left in it (deleted / moved / filtered out)
+  }
+  const items=groupItems(shown);                    // books of a series → one card
   $('empty').innerHTML=!lastList.length?'Nothing here yet.<br>Download a novel from the Download tab.'
-    :libQ?'No matches for “'+esc(libQ)+'”.':'Nothing in this category yet.';
-  $('empty').style.display=shown.length?'none':'block';
-  const cont=lastFolder?shown.find(n=>n.folder===lastFolder):null;
-  if(cont) el.appendChild(novelCard(cont,true));
-  shown.forEach(n=>{ if(cont&&n.folder===cont.folder) return; el.appendChild(novelCard(n,false)); });
+    :libQ?'No matches for “'+esc(libQ)+'”.'
+    :selCat==='Recent'?'Novels you open with Read show up here, last opened first.':'Nothing in this category yet.';
+  $('empty').style.display=items.length?'none':'block';
+  items.forEach((it,i)=>el.appendChild(stagger(it.series?seriesCard(it):novelCard(it.book,false),i)));
 }
+let lastSig='';
 function renderLib(list,cats,epubs,pdfs){
+  // the app now pushes the library whenever something changes — skip identical pushes (no flicker)
+  const sig=JSON.stringify([list,cats,epubs,pdfs,ttsFolder]);
+  if(sig===lastSig) return;
+  lastSig=sig;
   lastList=list; lastCats=cats&&cats.length?cats:['General','Completed'];
   lastEpubs=epubs||[]; lastPdfs=pdfs||[];
+  const y=libScroll;                            // keep the scroll position across a live refresh
   renderCats(); renderList();
+  restoreScroll(y);
 }
 $('libSearch').oninput=e=>{ libQ=e.target.value.trim().toLowerCase(); renderList(); };
 
 window.ngOnMessage=function(m){
   if(!m||!m.type) return;
-  if(m.type==='status') $('status').textContent=m.msg;
+  if(m.type==='status'){
+    $('status').textContent=m.msg;
+    const act=scrapeQueue.find(x=>x.status==='scraping');
+    if(act&&m.msg){
+      const mt=m.msg.match(/^Reading “(.+)”$/);
+      if(mt&&mt[1]){ act.title=mt[1]; renderQueue(); }
+    }
+  }
   else if(m.type==='log'){ const l=$('log'); l.textContent+=m.msg+'\n'; l.scrollTop=l.scrollHeight; $('substatus').textContent=m.msg; }
-  else if(m.type==='progress'){ if(m.total>0) $('pbar').style.width=Math.min(100,Math.round(m.done*100/m.total))+'%'; }
-  else if(m.type==='finished') setBusy(false);
-  else if(m.type==='lib'){ lastFolder=m.lastFolder||''; if(m.autoSort!==undefined) autoSortOn=!!m.autoSort; renderLib(m.list||[],m.cats||[],m.epubs||[],m.pdfs||[]); if($('pageSet').classList.contains('on')) renderSettings(); }
-  else if(m.type==='setShelf'){ pick(m.cat||'General'); }
+  else if(m.type==='progress'){
+    if(m.total>0) $('pbar').style.width=Math.min(100,Math.round(m.done*100/m.total))+'%';
+    const act=scrapeQueue.find(x=>x.status==='scraping');
+    if(act){
+      act.done=m.done||0;
+      if(act.count<=0&&m.total>0) act.total=m.total;
+      renderQueue();
+    }
+  }
+  else if(m.type==='finished'){
+    setBusy(false);
+    const act=scrapeQueue.find(x=>x.status==='scraping');
+    if(act){
+      if(m.how==='stopped'){
+        queueRunning=false;
+        act.status='queue';
+        renderQueue();
+      }else{
+        act.status='done';
+        renderQueue();
+        if(queueRunning&&scrapeQueue.some(x=>x.status==='queue')){
+          setTimeout(()=>runNextInQueue(),200);
+        }else{
+          queueRunning=false;
+          renderQueue();
+        }
+      }
+    }
+  }
+  else if(m.type==='lib'){ lastFolder=m.lastFolder||''; ttsFolder=m.ttsFolder||''; if(m.autoSort!==undefined) autoSortOn=!!m.autoSort; renderLib(m.list||[],m.cats||[],m.epubs||[],m.pdfs||[]); if($('pageSet').classList.contains('on')) renderSettings(); }
+  else if(m.type==='setShelf'){ pick(m.cat||'All'); }
+  else if(m.type==='closeSeries'){ openSeries=null; animNext=true; renderList(); restoreScroll(listScroll); }   // system Back
+  else if(m.type==='renamedSeries'){ if(openSeries&&openSeries.toLowerCase()===(m.from||'').toLowerCase()) openSeries=m.to; }
+  else if(m.type==='sorting'){ showSorting(m.on); }
+  else if(m.type==='toast'){ toast(m.msg||''); }
   else if(m.type==='theme'){ document.documentElement.dataset.theme = m.theme||'dark'; }
-  else if(m.type==='scrapeFrom'){ tab(true); $('url').value=m.url||''; if(m.count!=null) $('count').value=m.count; if(!busy) $('go').click(); }
+  else if(m.type==='scrapeFrom'){
+    tab(true);
+    if(queuedMode){
+      addToQueue(m.url||'',m.count!=null?m.count:50,m.title||'');
+    }else{
+      $('url').value=m.url||''; if(m.count!=null) $('count').value=m.count; if(!busy) $('go').click();
+    }
+  }
 };
 send({cmd:'lib'});
 </script>

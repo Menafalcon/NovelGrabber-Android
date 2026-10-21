@@ -8,27 +8,19 @@ The native Android client for **NovelGrabber**. It turns web serials into a clea
 
 ## Features
 
-* **Grab whole novels** from a chapter‑1 or contents URL, in batches of any size.
+* **Grab whole novels & Queued Scrape:** Download from a chapter‑1 or contents URL in batches of any size, or toggle **Queued Scrape** to queue multiple novels directly from the built‑in browser with live chapter progress (`0/total`), status badges (**In queue**, **Scraping**, **Done**), and automatic back‑to‑back downloading.
 
+* **Built‑in browser** to browse supported sites, solve captchas/log in, and scrape or queue the page you're on — no copy‑pasting links.
 
-* **Built‑in browser** to browse supported sites, solve captchas/log in, and scrape the page you're on — no copy‑pasting links.
+* **Library & Inline Collection Cards:** Cover‑art cards, reading progress, scroll position memory, search, and inline **Collection** cards in `All`, `Recent`, and `Completed`, plus smart **Auto‑sort** (ordered subsequence + fuzzy prefix matching with a live sorting progress modal) that groups multi‑volume series automatically.
 
+* **Reader with Arabic & RTL Support:** Four themes (Dark / Dark Sepia / Sepia / Light — applied app‑wide), automatic right‑to‑left (`dir="auto"`) rendering for Arabic and RTL text, auto‑scrolling to the active chapter in the Table of Contents, adjustable font/size/spacing, resume‑where‑you‑left‑off, and LN **illustrations** rendered inline.
 
-* **Library** with cover‑art cards, reading progress, search, and **categories** (General / Completed / your own) plus one‑click **Auto‑sort** that groups multi‑volume series by title similarity.
+* **Text‑to‑speech:** Utilizes the phone's own **on‑device Google voices** (including automatic Arabic voice selection and RTL punctuation chunking), with background playback + lock‑screen controls and custom pronunciation rules.
 
-
-* **Reader** with four themes (Dark / Dark Sepia / Sepia / Light — applied app‑wide), adjustable font/size/spacing, resume‑where‑you‑left‑off, and LN **illustrations** rendered inline.
-
-
-* **Text‑to‑speech:** Utilizes the phone's own **on‑device Google voices**, with background playback + lock‑screen controls.
-
-
-* **EPUB & PDF export** per novel (images included), and **import** existing `.epub` files/folders into the library.
-
+* **Zero‑Copy Linked EPUB & PDF Import + Export:** Export any novel to EPUB or PDF (images included), or import existing `.epub` and `.pdf` files/folders into the library as lightweight links without duplicating storage.
 
 * **Built‑in ad blocker** for the browser (host‑based, tuned for the ad networks novel sites use).
-
-
 
 ---
 
@@ -38,19 +30,17 @@ The native Android client for **NovelGrabber**. It turns web serials into a clea
 
 ```bash
 ./gradlew assembleDebug
-# APK: app/build/outputs/apk/debug/app-debug.apk
-
+# Prebuilt APK is also included at the repository root: NovelGrabber.apk
 ```
 
-Sideload the APK, then install/enable **Speech Recognition & Synthesis by Google** so the on‑device TTS voices are available.
+Sideload `NovelGrabber.apk`, then install/enable **Speech Recognition & Synthesis by Google** so the on‑device TTS voices are available.
 
 ## Layout
 
 ```
 app/src/main/
-├── java/com/novelgrabber/app/   # MainActivity, Engine, TtsService, Library, EpubRead/Writer, AdBlock…
-└── assets/                      # app.html (UI), reader.html (reader), sites.json (per-site rules)
-
+├── java/com/novelgrabber/app/   # MainActivity, Engine, Library, EpubImport/Read/Writer, TtsService, ScrapeService…
+└── assets/                      # app.html (UI & Queue), reader.html (Reader & TTS), sites.json (per-site rules)
 ```
 
 ## Legal

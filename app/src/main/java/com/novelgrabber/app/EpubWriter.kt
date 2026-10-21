@@ -68,6 +68,14 @@ p{margin:0 0 1em;text-indent:1.4em;}
                 zip.closeEntry()
             }
 
+            // illustrations of imported books (chapters reference ../images/<file>)
+            val imgFiles = File(meta.folder, "images").listFiles()?.filter { it.isFile }?.sortedBy { it.name } ?: emptyList()
+            for (f in imgFiles) {
+                zip.putNextEntry(ZipEntry("OEBPS/images/" + f.name))
+                f.inputStream().use { it.copyTo(zip) }
+                zip.closeEntry()
+            }
+
             val uid = "urn:uuid:novelgrabber-" + Library.sanitize(meta.title).replace(' ', '-') +
                     "-" + System.currentTimeMillis() / 1000
 
@@ -81,6 +89,14 @@ p{margin:0 0 1em;text-indent:1.4em;}
                 manifest.appendLine("""    <item id="cover-img" href="cover.$coverExt" media-type="$coverMime"/>""")
                 manifest.appendLine("""    <item id="cover-page" href="cover.xhtml" media-type="application/xhtml+xml"/>""")
                 spine.appendLine("""    <itemref idref="cover-page"/>""")
+            }
+
+            imgFiles.forEachIndexed { i, f ->
+                val mt = when (f.extension.lowercase()) {
+                    "png" -> "image/png"; "webp" -> "image/webp"; "gif" -> "image/gif"
+                    "svg" -> "image/svg+xml"; "bmp" -> "image/bmp"; else -> "image/jpeg"
+                }
+                manifest.appendLine("""    <item id="img${i + 1}" href="images/${f.name}" media-type="$mt"/>""")
             }
 
             val nav = StringBuilder()
